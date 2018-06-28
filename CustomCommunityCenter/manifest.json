@@ -1,0 +1,10 @@
+﻿{
+  "Name": "Custom Community Center Challenges",
+  "Author": "DefenTheNation",
+  "Version": "0.0.1-beta",
+  "Description": "Puts ",
+  "UniqueID": "DefenTheNation.CustomCommunityCenter",
+  "EntryDll": "CustomCommunityCenter.dll",
+  "MinimumApiVersion": "2.6-beta",
+  "UpdateKeys": [ "" ]
+}
