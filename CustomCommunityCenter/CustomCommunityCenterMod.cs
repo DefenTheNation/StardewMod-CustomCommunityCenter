@@ -18,12 +18,40 @@ namespace CustomCommunityCenter
 
         public override void Entry(IModHelper helper)
         {
+            var config = helper.ReadConfig<ModConfig>();
+            if(config == null)
+            {
+                config = new ModConfig();
+                config.Bundles = new List<BundleInfo>();
+                var testBundle = new BundleInfo()
+                {
+                    Name = "Test",
+                    RewardItemType = 0,
+                    RewardItemId = 0,
+                    RewardStack = 1
+                };
+                testBundle.Ingredients = new List<BundleItemInfo>()
+                {
+                    new BundleItemInfo()
+                    {
+                        Completed = false,
+                        ItemType = 0,
+                        ItemId = 0,
+                        ItemQuality = 0,
+                        RequiredStack = 1
+                    }
+                };
+
+                config.Bundles.Add(testBundle);
+
+                helper.WriteConfig<ModConfig>(config);
+            }
+
             SaveEvents.AfterLoad += SaveEvents_AfterLoad;
         }
 
         private void SaveEvents_AfterLoad(object sender, EventArgs e)
         {
-            int bundleGroupIndex = 0;
             int bundleIndex = 1;
             string rawBundleInfo = "";
             bool[] completedIngredientList = { false, false, false, false };

@@ -12,11 +12,11 @@ namespace CustomCommunityCenter
         public int RewardItemType { get; set; }
         public int RewardItemId { get; set; }
         public int RewardStack { get; set; }
-        public List<BundleItemInfo> Requirements { get; set; }
+        public List<BundleItemInfo> Ingredients { get; set; }
 
         public bool Completed
         {
-            get { return Requirements.All(x => x.Completed); }
+            get { return Ingredients.All(x => x.Completed); }
         }
     }
 }

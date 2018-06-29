@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Microsoft.Xna.Framework;
 using StardewValley;
 using StardewValley.Menus;
 using StardewValley.Objects;
@@ -29,14 +30,16 @@ namespace CustomCommunityCenter
         private bool depositsAllowed = true;
         private int ingredientSlots;
 
+        public int BundleColor { get; set; } = Color_Green;
+
         protected TemporaryAnimatedSprite sprite;
-        protected BundleInfo bundleInfo;
+        public BundleInfo BundleInfo { get; set; }
 
         public DisplayBundle(BundleInfo info, Point position) : base(new Rectangle(position.X, position.Y, SquareWidth, SquareWidth), "")
         {
-            bundleInfo = info;
-            isCompleted = bundleInfo.Completed;
-            ingredientSlots = bundleInfo.Requirements.Count;
+            BundleInfo = info;
+            isCompleted = BundleInfo.Completed;
+            ingredientSlots = BundleInfo.Ingredients.Count;
 
             bundleColor = Color_Yellow;
             string textureName = "";
@@ -66,7 +69,7 @@ namespace CustomCommunityCenter
             }
             else if (item is StardewValley.Object o)
             {
-                foreach(var bundleItem in bundleInfo.Requirements)
+                foreach(var bundleItem in BundleInfo.Ingredients)
                 {
                     if(bundleItem.BundleCompleted(o))
                     {
@@ -86,6 +89,11 @@ namespace CustomCommunityCenter
         public bool CanBeClicked()
         {
             return !isCompleted;
+        }
+
+        public bool IngredientDepositAnimation(ClickableComponent component, string animationName, bool flag)
+        {
+            return true;
         }
 
         //public void completionAnimation(bool playSound = true, int delay = 0)
@@ -121,6 +129,11 @@ namespace CustomCommunityCenter
                 default:
                     return Color.Lime;
             }
+        }
+
+        internal void completionAnimation(CustomJunimoNoteMenu customJunimoNoteMenu, bool v1, int v2)
+        {
+            throw new NotImplementedException();
         }
     }
 }
