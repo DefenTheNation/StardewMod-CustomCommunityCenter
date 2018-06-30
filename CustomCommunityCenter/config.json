@@ -1,21 +1,2 @@
 ﻿{
-  "Enabled": true,
-  "Bundles": [
-    {
-      "Name": "Test",
-      "Completed": false,
-      "RewardItemType": 0,
-      "RewardItemId": 0,
-      "RewardStack": 1,
-      "Ingredients": [
-        {
-          "ItemType": 0,
-          "ItemId": 0,
-          "ItemQuality": 0,
-          "RequiredStack": 1,
-          "Completed": false
-        }
-      ]
-    }
-  ]
 }

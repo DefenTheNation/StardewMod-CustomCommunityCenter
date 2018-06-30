@@ -6,6 +6,7 @@ namespace CustomCommunityCenter
     public class BundleAreaInfo
     {
         public int Id { get; set; }
+        public string Name { get; set; }
         public bool Collected { get; set; }
         public List<BundleInfo> Bundles { get; set; }
         

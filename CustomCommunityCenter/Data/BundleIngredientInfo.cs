@@ -21,15 +21,27 @@
         public int RequiredStack { get; set; }
         public bool Completed { get; set; }
 
-        public bool BundleCompleted(StardewValley.Object o)
+        public bool WillCompleteIngredient(StardewValley.Object o)
         {
             if(!Completed && ItemId == o.ParentSheetIndex && ItemQuality <= o.Quality && RequiredStack <= o.Stack)
             {
-                Completed = true;
                 return true;
             }
 
             return false;
+        }
+
+        public bool TryCompleteIngredient(StardewValley.Object o)
+        {
+            if (WillCompleteIngredient(o))
+            {
+                Completed = true;
+                o.Stack -= RequiredStack;
+
+                return true;
+            }
+            else return false;
+
         }
     }
 }

@@ -60,21 +60,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BundleAreaInfo.cs" />
-    <Compile Include="BundleInfo.cs" />
-    <Compile Include="BundleIngredientInfo.cs" />
-    <Compile Include="CustomCommunityCenter.cs" />
+    <Compile Include="Data\BundleAreaInfo.cs" />
+    <Compile Include="Data\BundleInfo.cs" />
+    <Compile Include="Data\BundleIngredientInfo.cs" />
+    <Compile Include="UI\CustomCommunityCenter.cs" />
     <Compile Include="CustomCommunityCenterMod.cs" />
-    <Compile Include="CustomJunimoNoteMenu.cs" />
-    <Compile Include="DisplayBundle.cs" />
-    <Compile Include="ItemCodes.cs" />
-    <Compile Include="ModConfig.cs" />
+    <Compile Include="UI\CustomJunimoNoteMenu.cs" />
+    <Compile Include="UI\DisplayBundle.cs" />
+    <Compile Include="Data\ItemCodes.cs" />
+    <Compile Include="Data\ModConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="config.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    <None Include="config.json" />
     <None Include="manifest.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
