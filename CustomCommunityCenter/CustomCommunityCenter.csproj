@@ -60,12 +60,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BundleAreaInfo.cs" />
     <Compile Include="BundleInfo.cs" />
-    <Compile Include="BundleItemInfo.cs" />
+    <Compile Include="BundleIngredientInfo.cs" />
     <Compile Include="CustomCommunityCenter.cs" />
     <Compile Include="CustomCommunityCenterMod.cs" />
     <Compile Include="CustomJunimoNoteMenu.cs" />
     <Compile Include="DisplayBundle.cs" />
+    <Compile Include="ItemCodes.cs" />
     <Compile Include="ModConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

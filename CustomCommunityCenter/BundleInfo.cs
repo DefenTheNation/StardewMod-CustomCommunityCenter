@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CustomCommunityCenter
 {
@@ -12,11 +9,14 @@ namespace CustomCommunityCenter
         public int RewardItemType { get; set; }
         public int RewardItemId { get; set; }
         public int RewardStack { get; set; }
-        public List<BundleItemInfo> Ingredients { get; set; }
+        public int IngredientsRequired { get; set; }
+        public List<BundleIngredientInfo> Ingredients { get; set; }
 
         public bool Completed
         {
-            get { return Ingredients.All(x => x.Completed); }
+            get { return IngredientsRequired == Ingredients.Count(x => x.Completed); }
         }
+
+        public bool Collected { get; set; }
     }
 }
