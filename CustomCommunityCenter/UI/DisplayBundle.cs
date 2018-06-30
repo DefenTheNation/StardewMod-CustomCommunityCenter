@@ -25,8 +25,7 @@ namespace CustomCommunityCenter
 
         public const int Color_Teal = 6;
 
-        private int completionTimer;
-        private bool isCompleted;       
+        private int completionTimer;     
         private int ingredientSlots;
 
         private float maxShake;
@@ -41,10 +40,9 @@ namespace CustomCommunityCenter
         public DisplayBundle(int bundleIndex, string textureName, BundleInfo info, Point position) : base(new Rectangle(position.X, position.Y, SquareWidth, SquareWidth), "")
         {
             BundleInfo = info;
-            isCompleted = BundleInfo.Completed;
             ingredientSlots = BundleInfo.IngredientsRequired;
 
-            BundleColor = Color_Green;
+            BundleColor = bundleIndex;
 
             sprite = new TemporaryAnimatedSprite(textureName, new Rectangle(BundleColor * 256 % 512, 244 + BundleColor * 256 / 512 * 16, 16, 16), 70f, 3, 99999, new Vector2((float)base.bounds.X, (float)base.bounds.Y), false, false, 0.8f, 0f, Color.White, 4f, 0f, 0f, 0f, false)
             {
@@ -52,11 +50,11 @@ namespace CustomCommunityCenter
             };
             sprite.paused = false;
             sprite.sourceRect.X += sprite.sourceRect.Width;
-            if (name.ToLower().Contains(Game1.currentSeason) && !isCompleted)
+            if (name.ToLower().Contains(Game1.currentSeason) && !BundleInfo.Completed)
             {
                 shake(0.07363108f);
             }
-            if (isCompleted)
+            if (BundleInfo.Completed)
             {
                 completionAnimation(false, 0);
             }
@@ -64,13 +62,13 @@ namespace CustomCommunityCenter
 
         public void tryHoverAction(int x, int y)
         {
-            if (base.bounds.Contains(x, y) && !isCompleted)
+            if (base.bounds.Contains(x, y) && !BundleInfo.Completed)
             {
                 sprite.paused = false;
                 label = BundleInfo.Name;
                 CustomJunimoNoteMenu.hoverText = BundleInfo.Name;
             }
-            else if (!isCompleted)
+            else if (!BundleInfo.Completed)
             {
                 sprite.reset();
                 sprite.sourceRect.X += sprite.sourceRect.Width;
@@ -91,24 +89,28 @@ namespace CustomCommunityCenter
                 {
                     if(bundleItem.TryCompleteIngredient(o))
                     {
+                        IngredientDepositAnimation(slot, noteTextureName, false);
                         slot.item = ObjectFactory.getItemFromDescription(0, bundleItem.ItemId, bundleItem.RequiredStack);
+                        
                         Game1.playSound("newArtifact");
 
-                        if (item.Stack <= 0) return null;
-                        else return item;                              
+                        slot.sourceRect.X = 512;
+                        slot.sourceRect.Y = 244;
+                        break;
                     }
                 }
             }
 
-            return item;
+            if (item.Stack <= 0) return null;
+            else return item;
         }
 
         public bool CanBeClicked()
         {
-            return !isCompleted;
+            return !BundleInfo.Completed;
         }
 
-        public void IngredientDepositAnimation(ClickableComponent slot, string noteTextureName, bool skipAnimation)
+        public void IngredientDepositAnimation(ClickableComponent slot, string noteTextureName, bool skipAnimation = false)
         {
             TemporaryAnimatedSprite t = new TemporaryAnimatedSprite(noteTextureName, new Rectangle(530, 244, 18, 18), 50f, 6, 1, new Vector2((float)slot.bounds.X, (float)slot.bounds.Y), false, false, 0.88f, 0f, Color.White, 4f, 0f, 0f, 0f, true)
             {
@@ -186,9 +188,9 @@ namespace CustomCommunityCenter
 
         private void completionAnimation(bool playSound = true)
         {
-            if (Game1.activeClickableMenu != null && Game1.activeClickableMenu is JunimoNoteMenu)
+            if (Game1.activeClickableMenu != null && Game1.activeClickableMenu is CustomJunimoNoteMenu menu)
             {
-                (Game1.activeClickableMenu as JunimoNoteMenu).takeDownBundleSpecificPage(null);
+                menu.TakeDownBundleSpecificPage(null);
             }
             sprite.pingPong = false;
             sprite.paused = false;
@@ -218,11 +220,9 @@ namespace CustomCommunityCenter
                     Game1.playSound("dwop");
                 }
                 base.bounds.Inflate(64, 64);
-                JunimoNoteMenu.tempSprites.AddRange(Utility.sparkleWithinArea(base.bounds, 8, getColorFromColorIndex(BundleColor) * 0.5f, 100, 0, ""));
+                CustomJunimoNoteMenu.tempSprites.AddRange(Utility.sparkleWithinArea(base.bounds, 8, getColorFromColorIndex(BundleColor) * 0.5f, 100, 0, ""));
                 base.bounds.Inflate(-64, -64);
             }
-
-#warning set bundle to complete here
         }
 
         public void shake(float force = 0.07363108f)
@@ -239,12 +239,12 @@ namespace CustomCommunityCenter
             if (extraInfo == 1)
             {
                 Game1.playSound("leafrustle");
-                JunimoNoteMenu.tempSprites.Add(new TemporaryAnimatedSprite(50, sprite.position, getColorFromColorIndex(BundleColor), 8, false, 100f, 0, -1, -1f, -1, 0)
+                CustomJunimoNoteMenu.tempSprites.Add(new TemporaryAnimatedSprite(50, sprite.position, getColorFromColorIndex(BundleColor), 8, false, 100f, 0, -1, -1f, -1, 0)
                 {
                     motion = new Vector2(-1f, 0.5f),
                     acceleration = new Vector2(0f, 0.02f)
                 });
-                JunimoNoteMenu.tempSprites.Add(new TemporaryAnimatedSprite(50, sprite.position, getColorFromColorIndex(BundleColor), 8, false, 100f, 0, -1, -1f, -1, 0)
+                CustomJunimoNoteMenu.tempSprites.Add(new TemporaryAnimatedSprite(50, sprite.position, getColorFromColorIndex(BundleColor), 8, false, 100f, 0, -1, -1f, -1, 0)
                 {
                     motion = new Vector2(1f, 0.5f),
                     acceleration = new Vector2(0f, 0.02f),
@@ -257,7 +257,7 @@ namespace CustomCommunityCenter
         public void update(GameTime time)
         {
             sprite.update(time);
-            if (completionTimer > 0 && JunimoNoteMenu.screenSwipe == null)
+            if (completionTimer > 0 && CustomJunimoNoteMenu.screenSwipe == null)
             {
                 completionTimer -= time.ElapsedGameTime.Milliseconds;
                 if (completionTimer <= 0)
@@ -265,7 +265,7 @@ namespace CustomCommunityCenter
                     completionAnimation(true);
                 }
             }
-            if (Game1.random.NextDouble() < 0.005 && (isCompleted || base.name.ToLower().Contains(Game1.currentSeason)))
+            if (Game1.random.NextDouble() < 0.005 && (BundleInfo.Completed || base.name.ToLower().Contains(Game1.currentSeason)))
             {
                 shake(0.07363108f);
             }

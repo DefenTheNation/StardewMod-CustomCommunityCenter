@@ -289,6 +289,7 @@ namespace CustomCommunityCenter
 
     public enum Objects
     {
+        Money = -1,
         Weeds = 0,
         DiamondStone = 2,
         RubyStone = 4,

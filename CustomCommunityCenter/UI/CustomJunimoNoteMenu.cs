@@ -24,11 +24,10 @@ namespace CustomCommunityCenter
         public static ScreenSwipe screenSwipe;
         public static string hoverText = "";
 
-        public bool scrambledText = false;
-        public List<ClickableTextureComponent> IngredientSlots = new List<ClickableTextureComponent>();
-        public List<ClickableTextureComponent> IngredientList = new List<ClickableTextureComponent>();
-        public List<ClickableTextureComponent> OtherClickableComponents = new List<ClickableTextureComponent>();
+        private int areaIndex;
+        private int bundleIndex;
 
+        private bool ViewingSpecificBundle;
         private Texture2D noteTexture;
         private InventoryMenu inventory;
         private Item heldItem;
@@ -37,39 +36,40 @@ namespace CustomCommunityCenter
         private List<DisplayBundle> bundles;
         private readonly List<BundleAreaInfo> bundleGroupList;
 
-        public ClickableTextureComponent backButton;
-        public ClickableTextureComponent purchaseButton;
-        public ClickableTextureComponent areaNextButton;
-        public ClickableTextureComponent areaBackButton;
-        public ClickableAnimatedComponent presentButton;
+        public ClickableTextureComponent BackButton { get; set; }
+        public ClickableTextureComponent PurchaseButton { get; set; }
+        public ClickableTextureComponent AreaNextButton { get; set; }
+        public ClickableTextureComponent AreaBackButton { get; set; }
+        public ClickableAnimatedComponent PresentButton { get; set; }
 
-        private bool ViewingSpecificBundle;
-        private bool fromGameMenu;
-        private bool fromThisMenu;
-        private bool bundlesChanged;
+        public bool FromGameMenu { get; set; }
+        public bool FromThisMenu { get; set; }
+        public bool BundlesChanged { get; set; }
+        public bool ScrambledText { get; set; }
 
-        private int areaIndex;
-        private int bundleIndex;
+        public List<ClickableTextureComponent> IngredientSlots { get; set; } = new List<ClickableTextureComponent>();
+        public List<ClickableTextureComponent> IngredientList { get; set; } = new List<ClickableTextureComponent>();
+        public List<ClickableTextureComponent> OtherClickableComponents { get; set; } = new List<ClickableTextureComponent>();
 
         public CustomJunimoNoteMenu(List<BundleAreaInfo> info, int index, bool _fromGameMenu, bool _fromThisMenu)
             : base(Game1.viewport.Width / 2 - 640, Game1.viewport.Height / 2 - 360, Width, Height, ShowCloseButton)
         {
             bundles = new List<DisplayBundle>();
 
-            fromGameMenu = _fromGameMenu;
-            fromThisMenu = _fromThisMenu;
+            FromGameMenu = _fromGameMenu;
+            FromThisMenu = _fromThisMenu;
 
             bundleGroupList = info;
             setupMenu(index);
 
             Game1.player.forceCanMove();
-            areaNextButton = new ClickableTextureComponent(new Rectangle(base.xPositionOnScreen + base.width - 128, base.yPositionOnScreen, 48, 44), Game1.mouseCursors, new Rectangle(365, 495, 12, 11), 4f, false)
+            AreaNextButton = new ClickableTextureComponent(new Rectangle(base.xPositionOnScreen + base.width - 128, base.yPositionOnScreen, 48, 44), Game1.mouseCursors, new Rectangle(365, 495, 12, 11), 4f, false)
             {
                 visible = false,
                 myID = 101,
                 leftNeighborID = 102
             };
-            areaBackButton = new ClickableTextureComponent(new Rectangle(base.xPositionOnScreen + 64, base.yPositionOnScreen, 48, 44), Game1.mouseCursors, new Rectangle(352, 495, 12, 11), 4f, false)
+            AreaBackButton = new ClickableTextureComponent(new Rectangle(base.xPositionOnScreen + 64, base.yPositionOnScreen, 48, 44), Game1.mouseCursors, new Rectangle(352, 495, 12, 11), 4f, false)
             {
                 visible = false,
                 myID = 102,
@@ -81,7 +81,7 @@ namespace CustomCommunityCenter
                 //if (cc.shouldNoteAppearInArea((area + j) % 6))
                 if(true)
                 {
-                    areaNextButton.visible = true;
+                    AreaNextButton.visible = true;
                 }
             }
             for (int i = 0; i < 6; i++)
@@ -95,7 +95,7 @@ namespace CustomCommunityCenter
                 // if(cc.shouldNoteAppearInArea(area))
                 if (true)
                 {
-                    areaBackButton.visible = true;
+                    AreaBackButton.visible = true;
                 }
             }
 
@@ -146,7 +146,7 @@ namespace CustomCommunityCenter
             }
 
             // Add back button
-            backButton = new ClickableTextureComponent("Back", new Rectangle(xPositionOnScreen + borderWidth * 2 + 8, yPositionOnScreen + borderWidth * 2 + 4, 64, 64), null, null, Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44, -1, -1), 1f, false)
+            BackButton = new ClickableTextureComponent("Back", new Rectangle(xPositionOnScreen + borderWidth * 2 + 8, yPositionOnScreen + borderWidth * 2 + 4, 64, 64), null, null, Game1.mouseCursors, Game1.getSourceRectForStandardTileSheet(Game1.mouseCursors, 44, -1, -1), 1f, false)
             {
                 myID = 103
             };
@@ -159,13 +159,45 @@ namespace CustomCommunityCenter
 
         private void setupBundleSpecificPage(DisplayBundle bundle)
         {
-            //tempSprites.Clear();
+            tempSprites.Clear();
 
             ViewingSpecificBundle = true;
             currentPageBundle = bundle;
 
+            if(bundle.BundleInfo.IsPurchase)
+            {
+                setupPurchaseBundle(bundle);
+            }
+            else
+            {
+                setupRegularBundle(bundle);
+            }
+
+            
+        }
+
+        private void setupPurchaseBundle(DisplayBundle bundle)
+        {
+            if (FromGameMenu) return;
+
+            PurchaseButton = new ClickableTextureComponent(new Rectangle(base.xPositionOnScreen + 800, base.yPositionOnScreen + 504, 260, 72), noteTexture, new Rectangle(517, 286, 65, 20), 4f, false)
+            {
+                myID = 797,
+                leftNeighborID = 103
+            };
+            if (Game1.options.SnappyMenus)
+            {
+                base.currentlySnappedComponent = PurchaseButton;
+                snapCursorToCurrentSnappedComponent();
+            }
+        }
+
+        private void setupRegularBundle(DisplayBundle bundle)
+        {
             var ingredientList = bundle.BundleInfo.Ingredients;
-            int numberOfIngredientSlots = ingredientList.Count;
+            int numberOfIngredientSlots = bundle.BundleInfo.IngredientsRequired;
+            int numberOfPossibleIngredients = ingredientList.Count;
+
             List<Rectangle> ingredientSlotRectangles = new List<Rectangle>();
             addRectangleRowsToList(ingredientSlotRectangles, numberOfIngredientSlots, 932, 540);
             for (int k = 0; k < ingredientSlotRectangles.Count; k++)
@@ -178,12 +210,11 @@ namespace CustomCommunityCenter
                 });
             }
             List<Rectangle> ingredientListRectangles = new List<Rectangle>();
-            addRectangleRowsToList(ingredientListRectangles, numberOfIngredientSlots, 932, 364);
+            addRectangleRowsToList(ingredientListRectangles, numberOfPossibleIngredients, 932, 364);
             for (int j = 0; j < ingredientListRectangles.Count; j++)
             {
                 if (Game1.objectInformation.ContainsKey(ingredientList[j].ItemId))
                 {
-#warning Update display name to use custom config
                     string displayName = Game1.objectInformation[ingredientList[j].ItemId].Split('/')[4];
 
                     IngredientList.Add(new ClickableTextureComponent("", ingredientListRectangles[j], "", displayName, Game1.objectSpriteSheet, Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, ingredientList[j].ItemId, 16, 16), 4f, false)
@@ -308,7 +339,7 @@ namespace CustomCommunityCenter
         private void completeCommunityCenter(int areaIndex)
         {
 #warning mark bundle group as completed
-#warning provide reward for bundle 
+#warning provide reward for bundle group
             //((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).areasComplete[whichArea] = true;
             //((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).areaCompleteReward(whichArea);
             base.exitFunction = restoreAreaOnExit;
@@ -316,7 +347,7 @@ namespace CustomCommunityCenter
 
         private void restoreAreaOnExit()
         {
-            if(!fromGameMenu)
+            if(!FromGameMenu)
             {
                 ((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).restoreAreaCutscene(areaIndex);
             }
@@ -324,21 +355,14 @@ namespace CustomCommunityCenter
 
         private void checkIfBundleIsComplete()
         {
-            if (!ViewingSpecificBundle || currentPageBundle == null) return;
-
-            foreach (ClickableTextureComponent ingredientSlot in IngredientSlots)
-            {
-                if (ingredientSlot.item == null)
-                {
-                    return;
-                }
-            }
+            if (!ViewingSpecificBundle || currentPageBundle == null || !currentPageBundle.BundleInfo.Completed) return;
 
             if (heldItem != null)
             {
                 Game1.player.addItemToInventory(heldItem);
                 heldItem = null;
             }
+
 #warning update community center bundle status
             //for (int j = 0; j < ((NetDictionary<int, bool[], NetArray<bool, NetBool>, SerializableDictionary<int, bool[]>, NetBundles>)((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).bundles)[currentPageBundle.bundleIndex].Length; j++)
             //{
@@ -346,7 +370,7 @@ namespace CustomCommunityCenter
             //}
 #warning notify community center to check for new junimo notes
             //((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).checkForNewJunimoNotes();
-            //screenSwipe = new ScreenSwipe(0, -1f, -1);
+            screenSwipe = new ScreenSwipe(0, -1f, -1);
             currentPageBundle.completionAnimation(this, true, 400);
             canClick = false;
 #warning sync bundles in multiplayer and send multiplayer chat message
@@ -383,13 +407,13 @@ namespace CustomCommunityCenter
             {
                 if (bundle.BundleInfo.Completed && !bundle.BundleInfo.Collected)
                 {
-                    presentButton = new ClickableAnimatedComponent(new Rectangle(xPositionOnScreen + 592, yPositionOnScreen + 512, 72, 72), "", Game1.content.LoadString("Strings\\StringsFromCSFiles:JunimoNoteMenu.cs.10783"), new TemporaryAnimatedSprite("LooseSprites\\JunimoNote", new Rectangle(548, 262, 18, 20), 70f, 4, 99999, new Vector2(-64f, -64f), false, false, 0.5f, 0f, Color.White, 4f, 0f, 0f, 0f, true));
+                    PresentButton = new ClickableAnimatedComponent(new Rectangle(xPositionOnScreen + 592, yPositionOnScreen + 512, 72, 72), "", Game1.content.LoadString("Strings\\StringsFromCSFiles:JunimoNoteMenu.cs.10783"), new TemporaryAnimatedSprite("LooseSprites\\JunimoNote", new Rectangle(548, 262, 18, 20), 70f, 4, 99999, new Vector2(-64f, -64f), false, false, 0.5f, 0f, Color.White, 4f, 0f, 0f, 0f, true));
                 }
             }
 
         }
 
-        private void takeDownBundleSpecificPage(DisplayBundle b)
+        public void TakeDownBundleSpecificPage(DisplayBundle b)
         {
             if (!ViewingSpecificBundle) return;
 
@@ -402,7 +426,7 @@ namespace CustomCommunityCenter
             IngredientSlots.Clear();
             IngredientList.Clear();
             tempSprites.Clear();
-            purchaseButton = null;
+            PurchaseButton = null;
 
             if (Game1.options.SnappyMenus)
             {
@@ -432,7 +456,7 @@ namespace CustomCommunityCenter
 
         private void reOpenThisMenu()
         {
-            Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, areaIndex, fromGameMenu, true);
+            Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, areaIndex, FromGameMenu, true);
         }
 
         private void rewardGrabbed(Item i, Farmer who)
@@ -448,7 +472,7 @@ namespace CustomCommunityCenter
             inventory.descriptionText = "";
             if (heldItem == null)
             {
-                takeDownBundleSpecificPage(currentPageBundle);
+                TakeDownBundleSpecificPage(currentPageBundle);
                 Game1.playSound("shwip");
             }
             else
@@ -510,8 +534,8 @@ namespace CustomCommunityCenter
             if (!ViewingSpecificBundle)
             {
                 b.Draw(noteTexture, new Vector2((float)base.xPositionOnScreen, (float)base.yPositionOnScreen), new Rectangle(0, 0, 320, 180), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.1f);
-                SpriteText.drawStringHorizontallyCenteredAt(b, scrambledText ? CommunityCenter.getAreaEnglishDisplayNameFromNumber(areaIndex) : CommunityCenter.getAreaDisplayNameFromNumber(areaIndex), base.xPositionOnScreen + base.width / 2 + 16, base.yPositionOnScreen + 12, 999999, -1, 99999, 0.88f, 0.88f, scrambledText, -1);
-                if (scrambledText)
+                SpriteText.drawStringHorizontallyCenteredAt(b, ScrambledText ? CommunityCenter.getAreaEnglishDisplayNameFromNumber(areaIndex) : CommunityCenter.getAreaDisplayNameFromNumber(areaIndex), base.xPositionOnScreen + base.width / 2 + 16, base.yPositionOnScreen + 12, 999999, -1, 99999, 0.88f, 0.88f, ScrambledText, -1);
+                if (ScrambledText)
                 {
                     SpriteText.drawString(b, LocalizedContentManager.CurrentLanguageLatin ? Game1.content.LoadString("Strings\\StringsFromCSFiles:JunimoNoteMenu.cs.10786") : Game1.content.LoadBaseString("Strings\\StringsFromCSFiles:JunimoNoteMenu.cs.10786"), base.xPositionOnScreen + 96, base.yPositionOnScreen + 96, 999999, base.width - 192, 99999, 0.88f, 0.88f, true, -1, "", -1);
                     base.draw(b);
@@ -525,22 +549,22 @@ namespace CustomCommunityCenter
                 {
                     bundle.Draw(b);
                 }
-                if (presentButton != null)
+                if (PresentButton != null)
                 {
-                    presentButton.draw(b);
+                    PresentButton.draw(b);
                 }
 
                 tempSprites.ForEach(x => x.draw(b, true, 0, 0, 1f));
 
-                if(fromGameMenu)
+                if(FromGameMenu)
                 {
-                    if (areaNextButton.visible)
+                    if (AreaNextButton.visible)
                     {
-                        areaNextButton.draw(b);
+                        AreaNextButton.draw(b);
                     }
-                    if (areaBackButton.visible)
+                    if (AreaBackButton.visible)
                     {
-                        areaBackButton.draw(b);
+                        AreaBackButton.draw(b);
                     }
                 }
             }
@@ -559,10 +583,10 @@ namespace CustomCommunityCenter
                     b.DrawString(Game1.dialogueFont, (!Game1.player.hasOrWillReceiveMail("canReadJunimoText")) ? "???" : Game1.content.LoadString("Strings\\UI:JunimoNote_BundleName", currentPageBundle.label), new Vector2((float)(base.xPositionOnScreen + 936) - textX / 2f, (float)(base.yPositionOnScreen + 244)) + new Vector2(2f, 0f), Game1.textShadowColor);
                     b.DrawString(Game1.dialogueFont, (!Game1.player.hasOrWillReceiveMail("canReadJunimoText")) ? "???" : Game1.content.LoadString("Strings\\UI:JunimoNote_BundleName", currentPageBundle.label), new Vector2((float)(base.xPositionOnScreen + 936) - textX / 2f, (float)(base.yPositionOnScreen + 244)), Game1.textColor * 0.9f);
                 }
-                backButton.draw(b);
-                if (purchaseButton != null)
+                BackButton.draw(b);
+                if (PurchaseButton != null)
                 {
-                    purchaseButton.draw(b);
+                    PurchaseButton.draw(b);
                     Game1.dayTimeMoneyBox.drawMoneyBox(b, -1, -1);
                 }
 
@@ -570,7 +594,7 @@ namespace CustomCommunityCenter
 
                 IngredientSlots.ForEach(x =>
                 {
-                    if (x.item == null) x.draw(b, fromGameMenu ? (Color.LightGray * 0.5f) : Color.White, 0.89f);
+                    if (x.item == null) x.draw(b, FromGameMenu ? (Color.LightGray * 0.5f) : Color.White, 0.89f);
                     x.drawItem(b, 4, 4);
                 });
 
@@ -627,9 +651,9 @@ namespace CustomCommunityCenter
                 }
             }
 
-            if (presentButton != null)
+            if (PresentButton != null)
             {
-                presentButton.update(time);
+                PresentButton.update(time);
             }
 
             if (screenSwipe != null)
@@ -642,7 +666,7 @@ namespace CustomCommunityCenter
                 }
             }
 
-            if (bundlesChanged && fromGameMenu)
+            if (BundlesChanged && FromGameMenu)
             {
                 reOpenThisMenu();
             }
@@ -653,14 +677,14 @@ namespace CustomCommunityCenter
             if (canClick)
             {
                 base.receiveLeftClick(x, y, playSound);
-                if (!scrambledText)
+                if (!ScrambledText)
                 {
                     if (ViewingSpecificBundle)
                     {
                         heldItem = inventory.leftClick(x, y, heldItem, true);
-                        if (backButton.containsPoint(x, y) && heldItem == null)
+                        if (BackButton.containsPoint(x, y) && heldItem == null)
                         {
-                            takeDownBundleSpecificPage(currentPageBundle);
+                            TakeDownBundleSpecificPage(currentPageBundle);
                             Game1.playSound("shwip");
                         }
                         if (heldItem != null)
@@ -686,25 +710,21 @@ namespace CustomCommunityCenter
                                 }
                             }
                         }
-                        if (purchaseButton != null && purchaseButton.containsPoint(x, y))
+                        if (PurchaseButton != null && PurchaseButton.containsPoint(x, y))
                         {
-#warning debug
-                            int moneyRequired = currentPageBundle.BundleInfo.Ingredients.Last().RequiredStack;
+                            int moneyRequired = currentPageBundle.BundleInfo.PurchaseAmount;
                             //int moneyRequired = 0;
                             if (Game1.player.Money >= moneyRequired)
                             {
                                 Game1.player.Money -= moneyRequired;
                                 Game1.playSound("select");
                                 currentPageBundle.completionAnimation(this, true, 0);
-                                if (purchaseButton != null)
+                                if (PurchaseButton != null)
                                 {
-                                    purchaseButton.scale = purchaseButton.baseScale * 0.75f;
+                                    PurchaseButton.scale = PurchaseButton.baseScale * 0.75f;
                                 }
 
-#warning mark bundle as collected
-                                bundleGroupList[areaIndex].Collected = true;
-                                //((NetDictionary<int, bool, NetBool, SerializableDictionary<int, bool>, NetIntDictionary<bool, NetBool>>)((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).bundleRewards)[currentPageBundle.bundleIndex] = true;
-                                //(Game1.getLocationFromName("CommunityCenter") as CommunityCenter).bundles.FieldDict[currentPageBundle.bundleIndex][0] = true;
+                                currentPageBundle.BundleInfo.PurchaseCompleted();
                                 checkForRewards();
 
                                 if (bundleGroupList[areaIndex].Completed)
@@ -741,24 +761,24 @@ namespace CustomCommunityCenter
                             }
                         }
 
-                        if (presentButton != null && presentButton.containsPoint(x, y) && !fromGameMenu && !fromThisMenu)
+                        if (PresentButton != null && PresentButton.containsPoint(x, y) && !FromGameMenu && !FromThisMenu)
                         {
                             openRewardsMenu();
                         }
-                        if (fromGameMenu)
+                        if (FromGameMenu)
                         {
-                            if (areaNextButton.containsPoint(x, y))
+                            if (AreaNextButton.containsPoint(x, y))
                             {
                                 for (int j = 1; j < 7; j++)
                                 {
                                     if (shouldNoteAppearInArea((areaIndex + j) % 6))
                                     {
-                                        Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, (areaIndex + j) % 6, fromGameMenu, true);
+                                        Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, (areaIndex + j) % 6, FromGameMenu, true);
                                         return;
                                     }
                                 }
                             }
-                            else if (areaBackButton.containsPoint(x, y))
+                            else if (AreaBackButton.containsPoint(x, y))
                             {
                                 int area = areaIndex;
                                 for (int i = 1; i < 7; i++)
@@ -770,7 +790,7 @@ namespace CustomCommunityCenter
                                     }
                                     if (shouldNoteAppearInArea(area))
                                     {
-                                        Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, area, fromGameMenu, true);
+                                        Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, area, FromGameMenu, true);
                                         return;
                                     }
                                 }
@@ -789,7 +809,7 @@ namespace CustomCommunityCenter
 
         private bool shouldNoteAppearInArea(int area)
         {
-#warning update shouldNoteAppearInArea to do checks
+#warning update shouldNoteAppearInArea to do checks in Community Center class
             return true;
         }
 
@@ -829,7 +849,7 @@ namespace CustomCommunityCenter
         public override void receiveGamePadButton(Buttons b)
         {
             base.receiveGamePadButton(b);
-            if (fromGameMenu)
+            if (FromGameMenu)
             {
                 CommunityCenter cc = Game1.getLocationFromName("CommunityCenter") as CommunityCenter;
                 switch (b)
@@ -850,7 +870,7 @@ namespace CustomCommunityCenter
                                 }
                                 return;
                             }
-                            Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, (areaIndex + j) % 6, fromGameMenu, true);
+                            Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, (areaIndex + j) % 6, FromGameMenu, true);
                             break;
                         }
                     case Buttons.LeftTrigger:
@@ -875,7 +895,7 @@ namespace CustomCommunityCenter
                                 }
                                 return;
                             }
-                            Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, area, fromGameMenu, true);
+                            Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, area, FromGameMenu, true);
                             break;
                         }
                 }
@@ -885,14 +905,13 @@ namespace CustomCommunityCenter
         public override void performHoverAction(int x, int y)
         {
             base.performHoverAction(x, y);
-            if (!scrambledText)
+            if (!ScrambledText)
             {
                 hoverText = "";
                 if (ViewingSpecificBundle)
                 {
-                    backButton.tryHover(x, y, 0.1f);
+                    BackButton.tryHover(x, y, 0.1f);
                     hoveredItem = inventory.hover(x, y, heldItem);
-                    List<ClickableTextureComponent>.Enumerator enumerator =IngredientList.GetEnumerator();
 
                     foreach(var ingredient in IngredientList)
                     {
@@ -919,25 +938,25 @@ namespace CustomCommunityCenter
                             }
                         }
                     }
-                    if (purchaseButton != null)
+                    if (PurchaseButton != null)
                     {
-                        purchaseButton.tryHover(x, y, 0.1f);
+                        PurchaseButton.tryHover(x, y, 0.1f);
                     }
                 }
                 else
                 {
-                    if (presentButton != null)
+                    if (PresentButton != null)
                     {
-                        hoverText = presentButton.tryHover(x, y);
+                        hoverText = PresentButton.tryHover(x, y);
                     }
                     foreach (var bundle in bundles)
                     {
                         bundle.tryHoverAction(x, y);
                     }
-                    if (fromGameMenu)
+                    if (FromGameMenu)
                     {
-                        areaNextButton.tryHover(x, y, 0.1f);
-                        areaBackButton.tryHover(x, y, 0.1f);
+                        AreaNextButton.tryHover(x, y, 0.1f);
+                        AreaBackButton.tryHover(x, y, 0.1f);
                     }
                 }
             }
@@ -1006,27 +1025,27 @@ namespace CustomCommunityCenter
                     switch (direction)
                     {
                         case 2:
-                            if (presentButton != null)
+                            if (PresentButton != null)
                             {
-                                base.currentlySnappedComponent = presentButton;
+                                base.currentlySnappedComponent = PresentButton;
                                 snapCursorToCurrentSnappedComponent();
-                                presentButton.upNeighborID = oldID;
+                                PresentButton.upNeighborID = oldID;
                             }
                             break;
                         case 3:
-                            if (areaBackButton != null)
+                            if (AreaBackButton != null)
                             {
-                                base.currentlySnappedComponent = areaBackButton;
+                                base.currentlySnappedComponent = AreaBackButton;
                                 snapCursorToCurrentSnappedComponent();
-                                areaBackButton.rightNeighborID = oldID;
+                                AreaBackButton.rightNeighborID = oldID;
                             }
                             break;
                         case 1:
-                            if (areaNextButton != null)
+                            if (AreaNextButton != null)
                             {
-                                base.currentlySnappedComponent = areaNextButton;
+                                base.currentlySnappedComponent = AreaNextButton;
                                 snapCursorToCurrentSnappedComponent();
-                                areaNextButton.leftNeighborID = oldID;
+                                AreaNextButton.leftNeighborID = oldID;
                             }
                             break;
                     }
@@ -1042,7 +1061,6 @@ namespace CustomCommunityCenter
             }
             return false;
         }
-
-        
+       
     }
 }
