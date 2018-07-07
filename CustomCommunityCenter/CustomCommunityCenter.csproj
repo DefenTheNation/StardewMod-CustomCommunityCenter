@@ -63,6 +63,7 @@
     <Compile Include="Data\BundleAreaInfo.cs" />
     <Compile Include="Data\BundleInfo.cs" />
     <Compile Include="Data\BundleIngredientInfo.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="UI\CustomCommunityCenter.cs" />
     <Compile Include="CustomCommunityCenterMod.cs" />
     <Compile Include="UI\CustomJunimoNoteMenu.cs" />

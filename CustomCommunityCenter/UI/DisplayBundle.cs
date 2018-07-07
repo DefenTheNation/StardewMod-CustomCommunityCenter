@@ -30,6 +30,7 @@ namespace CustomCommunityCenter
 
         private float maxShake;
         private bool shakeLeft;
+        private bool completed;
 
         public int BundleColor { get; set; }
         public bool DepositsAllowed { get; set; } = true;
@@ -41,7 +42,7 @@ namespace CustomCommunityCenter
         {
             BundleInfo = info;
             ingredientSlots = BundleInfo.IngredientsRequired;
-
+            completed = BundleInfo.Completed;
             BundleColor = bundleIndex;
 
             sprite = new TemporaryAnimatedSprite(textureName, new Rectangle(BundleColor * 256 % 512, 244 + BundleColor * 256 / 512 * 16, 16, 16), 70f, 3, 99999, new Vector2((float)base.bounds.X, (float)base.bounds.Y), false, false, 0.8f, 0f, Color.White, 4f, 0f, 0f, 0f, false)
@@ -203,8 +204,7 @@ namespace CustomCommunityCenter
             sprite.endFunction = shake;
             sprite.extraInfoForEndBehavior = 1;
 
-            bool complete = BundleInfo.Completed;
-            if (complete)
+            if (completed)
             {
                 sprite.sourceRect.X += sprite.sourceRect.Width * 14;
                 sprite.sourceRectStartingPos = new Vector2((float)sprite.sourceRect.X, (float)sprite.sourceRect.Y);
@@ -223,6 +223,8 @@ namespace CustomCommunityCenter
                 CustomJunimoNoteMenu.tempSprites.AddRange(Utility.sparkleWithinArea(base.bounds, 8, getColorFromColorIndex(BundleColor) * 0.5f, 100, 0, ""));
                 base.bounds.Inflate(-64, -64);
             }
+
+            completed = true;
         }
 
         public void shake(float force = 0.07363108f)

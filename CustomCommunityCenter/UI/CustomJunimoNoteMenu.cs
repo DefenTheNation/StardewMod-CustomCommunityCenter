@@ -9,7 +9,6 @@ using StardewValley.Menus;
 using StardewValley.Objects;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace CustomCommunityCenter
 {
@@ -60,7 +59,7 @@ namespace CustomCommunityCenter
             FromThisMenu = _fromThisMenu;
 
             bundleGroupList = info;
-            setupMenu(index);
+            SetupMenu(index);
 
             Game1.player.forceCanMove();
             AreaNextButton = new ClickableTextureComponent(new Rectangle(base.xPositionOnScreen + base.width - 128, base.yPositionOnScreen, 48, 44), Game1.mouseCursors, new Rectangle(365, 495, 12, 11), 4f, false)
@@ -75,21 +74,21 @@ namespace CustomCommunityCenter
                 myID = 102,
                 rightNeighborID = 101
             };
-            for (int j = 0; j < 6; j++)
+            for (int j = 0; j < info.Count; j++)
             {
 #warning Get whether note should appear from community center
-                //if (cc.shouldNoteAppearInArea((area + j) % 6))
+                //if (cc.shouldNoteAppearInArea((area + j) % info.Count))
                 if(true)
                 {
                     AreaNextButton.visible = true;
                 }
             }
-            for (int i = 0; i < 6; i++)
+            for (int i = 0; i < info.Count; i++)
             {
                 int a = areaIndex - i;
                 if (a == -1)
                 {
-                    a = 5;
+                    a = info.Count - 1;
                 }
 #warning Get whether note should appear from community center
                 // if(cc.shouldNoteAppearInArea(area))
@@ -101,10 +100,9 @@ namespace CustomCommunityCenter
 
             foreach (var bundle in bundles)
             {
-#warning debug
-                //bundle.DepositsAllowed = false;
-                bundle.DepositsAllowed = true;
+                bundle.DepositsAllowed = false;
             }
+
             if (Game1.options.SnappyMenus)
             {
                 base.populateClickableComponentList();
@@ -112,12 +110,12 @@ namespace CustomCommunityCenter
             }
         }
 
-        private string getRewardNameForArea(int index)
+        private string GetRewardNameForArea(int index)
         {
             return bundleGroupList[areaIndex].Name;
         }
 
-        private void setupMenu(int area)
+        private void SetupMenu(int area)
         {
             areaIndex = area;
             noteTexture = Game1.temporaryContent.Load<Texture2D>(BundleTextureName);
@@ -133,7 +131,7 @@ namespace CustomCommunityCenter
             var bundleInfo = bundleGroupList[areaIndex];
             foreach(var bundle in bundleInfo.Bundles)
             {
-                bundles.Add(new DisplayBundle(bundlesAdded, BundleTextureName, bundle, getBundleLocationFromNumber(bundlesAdded))
+                bundles.Add(new DisplayBundle(bundlesAdded, BundleTextureName, bundle, GetBundleLocationFromNumber(bundlesAdded))
                 {
                     myID = bundlesAdded + 505,
                     rightNeighborID = -7777,
@@ -152,12 +150,12 @@ namespace CustomCommunityCenter
             };
 
             // Add update to community center
-            checkForRewards();
+            CheckForRewards();
             canClick = true;
             Game1.playSound("shwip");
         }
 
-        private void setupBundleSpecificPage(DisplayBundle bundle)
+        private void SetupBundleSpecificPage(DisplayBundle bundle)
         {
             tempSprites.Clear();
 
@@ -166,17 +164,17 @@ namespace CustomCommunityCenter
 
             if(bundle.BundleInfo.IsPurchase)
             {
-                setupPurchaseBundle(bundle);
+                SetupPurchaseBundle(bundle);
             }
             else
             {
-                setupRegularBundle(bundle);
+                SetupRegularBundle(bundle);
             }
 
             
         }
 
-        private void setupPurchaseBundle(DisplayBundle bundle)
+        private void SetupPurchaseBundle(DisplayBundle bundle)
         {
             if (FromGameMenu) return;
 
@@ -192,14 +190,14 @@ namespace CustomCommunityCenter
             }
         }
 
-        private void setupRegularBundle(DisplayBundle bundle)
+        private void SetupRegularBundle(DisplayBundle bundle)
         {
             var ingredientList = bundle.BundleInfo.Ingredients;
             int numberOfIngredientSlots = bundle.BundleInfo.IngredientsRequired;
             int numberOfPossibleIngredients = ingredientList.Count;
 
             List<Rectangle> ingredientSlotRectangles = new List<Rectangle>();
-            addRectangleRowsToList(ingredientSlotRectangles, numberOfIngredientSlots, 932, 540);
+            AddRectangleRowsToList(ingredientSlotRectangles, numberOfIngredientSlots, 932, 540);
             for (int k = 0; k < ingredientSlotRectangles.Count; k++)
             {
                 IngredientSlots.Add(new ClickableTextureComponent(ingredientSlotRectangles[k], noteTexture, new Rectangle(512, 244, 18, 18), 4f, false)
@@ -210,7 +208,7 @@ namespace CustomCommunityCenter
                 });
             }
             List<Rectangle> ingredientListRectangles = new List<Rectangle>();
-            addRectangleRowsToList(ingredientListRectangles, numberOfPossibleIngredients, 932, 364);
+            AddRectangleRowsToList(ingredientListRectangles, numberOfPossibleIngredients, 932, 364);
             for (int j = 0; j < ingredientListRectangles.Count; j++)
             {
                 if (Game1.objectInformation.ContainsKey(ingredientList[j].ItemId))
@@ -223,7 +221,7 @@ namespace CustomCommunityCenter
                     });
                 }
             }
-            updateIngredientSlots(bundle);
+            UpdateIngredientSlots(bundle);
             if (Game1.options.SnappyMenus)
             {
                 base.populateClickableComponentList();
@@ -257,7 +255,7 @@ namespace CustomCommunityCenter
             }
         }
 
-        private void updateIngredientSlots(DisplayBundle bundle)
+        private void UpdateIngredientSlots(DisplayBundle bundle)
         {
             int slotNumber = 0;
             var info = bundle.BundleInfo;
@@ -273,58 +271,58 @@ namespace CustomCommunityCenter
             }
         }
 
-        private void addRectangleRowsToList(List<Rectangle> toAddTo, int numberOfItems, int centerX, int centerY)
+        private void AddRectangleRowsToList(List<Rectangle> toAddTo, int numberOfItems, int centerX, int centerY)
         {
             switch (numberOfItems)
             {
                 case 1:
-                    toAddTo.AddRange(createRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY, 1, 72, 72, 12));
+                    toAddTo.AddRange(CreateRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY, 1, 72, 72, 12));
                     break;
                 case 2:
-                    toAddTo.AddRange(createRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY, 2, 72, 72, 12));
+                    toAddTo.AddRange(CreateRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY, 2, 72, 72, 12));
                     break;
                 case 3:
-                    toAddTo.AddRange(createRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY, 3, 72, 72, 12));
+                    toAddTo.AddRange(CreateRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY, 3, 72, 72, 12));
                     break;
                 case 4:
-                    toAddTo.AddRange(createRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY, 4, 72, 72, 12));
+                    toAddTo.AddRange(CreateRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY, 4, 72, 72, 12));
                     break;
                 case 5:
-                    toAddTo.AddRange(createRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY - 36, 3, 72, 72, 12));
-                    toAddTo.AddRange(createRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY + 40, 2, 72, 72, 12));
+                    toAddTo.AddRange(CreateRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY - 36, 3, 72, 72, 12));
+                    toAddTo.AddRange(CreateRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY + 40, 2, 72, 72, 12));
                     break;
                 case 6:
-                    toAddTo.AddRange(createRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY - 36, 3, 72, 72, 12));
-                    toAddTo.AddRange(createRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY + 40, 3, 72, 72, 12));
+                    toAddTo.AddRange(CreateRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY - 36, 3, 72, 72, 12));
+                    toAddTo.AddRange(CreateRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY + 40, 3, 72, 72, 12));
                     break;
                 case 7:
-                    toAddTo.AddRange(createRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY - 36, 4, 72, 72, 12));
-                    toAddTo.AddRange(createRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY + 40, 3, 72, 72, 12));
+                    toAddTo.AddRange(CreateRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY - 36, 4, 72, 72, 12));
+                    toAddTo.AddRange(CreateRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY + 40, 3, 72, 72, 12));
                     break;
                 case 8:
-                    toAddTo.AddRange(createRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY - 36, 4, 72, 72, 12));
-                    toAddTo.AddRange(createRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY + 40, 4, 72, 72, 12));
+                    toAddTo.AddRange(CreateRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY - 36, 4, 72, 72, 12));
+                    toAddTo.AddRange(CreateRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY + 40, 4, 72, 72, 12));
                     break;
                 case 9:
-                    toAddTo.AddRange(createRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY - 36, 5, 72, 72, 12));
-                    toAddTo.AddRange(createRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY + 40, 4, 72, 72, 12));
+                    toAddTo.AddRange(CreateRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY - 36, 5, 72, 72, 12));
+                    toAddTo.AddRange(CreateRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY + 40, 4, 72, 72, 12));
                     break;
                 case 10:
-                    toAddTo.AddRange(createRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY - 36, 5, 72, 72, 12));
-                    toAddTo.AddRange(createRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY + 40, 5, 72, 72, 12));
+                    toAddTo.AddRange(CreateRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY - 36, 5, 72, 72, 12));
+                    toAddTo.AddRange(CreateRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY + 40, 5, 72, 72, 12));
                     break;
                 case 11:
-                    toAddTo.AddRange(createRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY - 36, 6, 72, 72, 12));
-                    toAddTo.AddRange(createRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY + 40, 5, 72, 72, 12));
+                    toAddTo.AddRange(CreateRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY - 36, 6, 72, 72, 12));
+                    toAddTo.AddRange(CreateRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY + 40, 5, 72, 72, 12));
                     break;
                 case 12:
-                    toAddTo.AddRange(createRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY - 36, 6, 72, 72, 12));
-                    toAddTo.AddRange(createRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY + 40, 6, 72, 72, 12));
+                    toAddTo.AddRange(CreateRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY - 36, 6, 72, 72, 12));
+                    toAddTo.AddRange(CreateRowOfBoxesCenteredAt(xPositionOnScreen + centerX, yPositionOnScreen + centerY + 40, 6, 72, 72, 12));
                     break;
             }
         }
 
-        private List<Rectangle> createRowOfBoxesCenteredAt(int xStart, int yStart, int numBoxes, int boxWidth, int boxHeight, int horizontalGap)
+        private List<Rectangle> CreateRowOfBoxesCenteredAt(int xStart, int yStart, int numBoxes, int boxWidth, int boxHeight, int horizontalGap)
         {
             List<Rectangle> rectangles = new List<Rectangle>();
             int actualXStart = xStart - numBoxes * (boxWidth + horizontalGap) / 2;
@@ -336,16 +334,16 @@ namespace CustomCommunityCenter
             return rectangles;
         }
 
-        private void completeCommunityCenter(int areaIndex)
+        private void CompleteCommunityCenter(int areaIndex)
         {
-#warning mark bundle group as completed
 #warning provide reward for bundle group
+            
             //((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).areasComplete[whichArea] = true;
             //((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).areaCompleteReward(whichArea);
-            base.exitFunction = restoreAreaOnExit;
+            base.exitFunction = RestoreAreaOnExit;
         }
 
-        private void restoreAreaOnExit()
+        private void RestoreAreaOnExit()
         {
             if(!FromGameMenu)
             {
@@ -353,7 +351,7 @@ namespace CustomCommunityCenter
             }
         }
 
-        private void checkIfBundleIsComplete()
+        private void CheckIfBundleIsComplete()
         {
             if (!ViewingSpecificBundle || currentPageBundle == null || !currentPageBundle.BundleInfo.Completed) return;
 
@@ -389,7 +387,7 @@ namespace CustomCommunityCenter
             {
 #warning complete community center section and give reward
                 //((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).areasComplete[whichArea] = true;
-                base.exitFunction = restoreAreaOnExit;
+                base.exitFunction = RestoreAreaOnExit;
                 //((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).areaCompleteReward(whichArea);
             }
             else
@@ -398,19 +396,21 @@ namespace CustomCommunityCenter
                 i?.bringBundleBackToHut(Bundle.getColorFromColorIndex(currentPageBundle.BundleColor), Game1.getLocationFromName("CommunityCenter"));
             }
 
-            checkForRewards();
+            CheckForRewards();
         }
 
-        private void checkForRewards()
+        private void CheckForRewards()
         {
             foreach (var bundle in bundles)
             {
                 if (bundle.BundleInfo.Completed && !bundle.BundleInfo.Collected)
                 {
                     PresentButton = new ClickableAnimatedComponent(new Rectangle(xPositionOnScreen + 592, yPositionOnScreen + 512, 72, 72), "", Game1.content.LoadString("Strings\\StringsFromCSFiles:JunimoNoteMenu.cs.10783"), new TemporaryAnimatedSprite("LooseSprites\\JunimoNote", new Rectangle(548, 262, 18, 20), 70f, 4, 99999, new Vector2(-64f, -64f), false, false, 0.5f, 0f, Color.White, 4f, 0f, 0f, 0f, true));
+                    return;
                 }
             }
 
+            PresentButton = null;
         }
 
         public void TakeDownBundleSpecificPage(DisplayBundle b)
@@ -434,7 +434,7 @@ namespace CustomCommunityCenter
             }
         }
 
-        private void openRewardsMenu()
+        private void OpenRewardsMenu()
         {
             Game1.playSound("smallSelect");
             List<Item> rewards = new List<Item>();
@@ -450,21 +450,24 @@ namespace CustomCommunityCenter
                 }
             }
 
-            Game1.activeClickableMenu = new ItemGrabMenu(rewards, false, true, null, null, null, rewardGrabbed, false, true, true, true, false, 0, null, -1, null);
-            Game1.activeClickableMenu.exitFunction = ((base.exitFunction != null) ? base.exitFunction : new onExit(reOpenThisMenu));
+            Game1.activeClickableMenu = new ItemGrabMenu(rewards, false, true, null, null, null, RewardGrabbed, false, true, true, true, false, 0, null, -1, null)
+            {
+                exitFunction = (base.exitFunction ?? new onExit(ReOpenThisMenu))
+            };
         }
 
-        private void reOpenThisMenu()
+        private void ReOpenThisMenu()
         {
             Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, areaIndex, FromGameMenu, true);
+            //PresentButton = null;
         }
 
-        private void rewardGrabbed(Item i, Farmer who)
+        private void RewardGrabbed(Item i, Farmer who)
         {
             bundleGroupList[areaIndex].Bundles[i.SpecialVariable].Collected = true;
         }
 
-        private void closeBundlePage()
+        private void CloseBundlePage()
         {
             if (!ViewingSpecificBundle) return;
 
@@ -481,7 +484,7 @@ namespace CustomCommunityCenter
             }
         }
 
-        private Point getBundleLocationFromNumber(int bundlesAdded)
+        private Point GetBundleLocationFromNumber(int bundlesAdded)
         {
             Point location = new Point(xPositionOnScreen, yPositionOnScreen);
             switch (bundlesAdded)
@@ -607,7 +610,7 @@ namespace CustomCommunityCenter
                 inventory.draw(b);
             }
 
-            SpriteText.drawStringWithScrollCenteredAt(b, getRewardNameForArea(areaIndex), base.xPositionOnScreen + base.width / 2, Math.Min(base.yPositionOnScreen + base.height + 20, Game1.viewport.Height - 64 - 8), "", 1f, -1, 0, 0.88f, false);
+            SpriteText.drawStringWithScrollCenteredAt(b, GetRewardNameForArea(areaIndex), base.xPositionOnScreen + base.width / 2, Math.Min(base.yPositionOnScreen + base.height + 20, Game1.viewport.Height - 64 - 8), "", 1f, -1, 0, 0.88f, false);
             base.draw(b);
             Game1.mouseCursorTransparency = 1f;
 
@@ -668,7 +671,7 @@ namespace CustomCommunityCenter
 
             if (BundlesChanged && FromGameMenu)
             {
-                reOpenThisMenu();
+                ReOpenThisMenu();
             }
         }
 
@@ -696,7 +699,7 @@ namespace CustomCommunityCenter
                                     if (IngredientSlots[m].item == null)
                                     {
                                         heldItem = currentPageBundle.tryToDepositThisItem(heldItem, IngredientSlots[m], "LooseSprites\\JunimoNote");
-                                        checkIfBundleIsComplete();
+                                        CheckIfBundleIsComplete();
                                         return;
                                     }
                                 }
@@ -706,7 +709,7 @@ namespace CustomCommunityCenter
                                 if (IngredientSlots[l].containsPoint(x, y) && IngredientSlots[l].item == null)
                                 {
                                     heldItem = currentPageBundle.tryToDepositThisItem(heldItem, IngredientSlots[l], "LooseSprites\\JunimoNote");
-                                    checkIfBundleIsComplete();
+                                    CheckIfBundleIsComplete();
                                 }
                             }
                         }
@@ -725,11 +728,11 @@ namespace CustomCommunityCenter
                                 }
 
                                 currentPageBundle.BundleInfo.PurchaseCompleted();
-                                checkForRewards();
+                                CheckForRewards();
 
                                 if (bundleGroupList[areaIndex].Completed)
                                 {
-                                    completeCommunityCenter(areaIndex);
+                                    CompleteCommunityCenter(areaIndex);
                                 }
                                 else
                                 {
@@ -745,7 +748,7 @@ namespace CustomCommunityCenter
                         }
                         if (base.upperRightCloseButton != null && !readyToClose() && base.upperRightCloseButton.containsPoint(x, y))
                         {
-                            closeBundlePage();
+                            CloseBundlePage();
                         }
                     }
                     else
@@ -755,7 +758,7 @@ namespace CustomCommunityCenter
                             if (bundles[i].CanBeClicked() && bundles[i].containsPoint(x, y))
                             {
                                 bundleIndex = i;
-                                setupBundleSpecificPage(bundles[i]);
+                                SetupBundleSpecificPage(bundles[i]);
                                 Game1.playSound("shwip");
                                 return;
                             }
@@ -763,7 +766,7 @@ namespace CustomCommunityCenter
 
                         if (PresentButton != null && PresentButton.containsPoint(x, y) && !FromGameMenu && !FromThisMenu)
                         {
-                            openRewardsMenu();
+                            OpenRewardsMenu();
                         }
                         if (FromGameMenu)
                         {
@@ -771,7 +774,7 @@ namespace CustomCommunityCenter
                             {
                                 for (int j = 1; j < 7; j++)
                                 {
-                                    if (shouldNoteAppearInArea((areaIndex + j) % 6))
+                                    if (ShouldNoteAppearInArea((areaIndex + j) % 6))
                                     {
                                         Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, (areaIndex + j) % 6, FromGameMenu, true);
                                         return;
@@ -788,7 +791,7 @@ namespace CustomCommunityCenter
                                     {
                                         area = 5;
                                     }
-                                    if (shouldNoteAppearInArea(area))
+                                    if (ShouldNoteAppearInArea(area))
                                     {
                                         Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, area, FromGameMenu, true);
                                         return;
@@ -807,7 +810,7 @@ namespace CustomCommunityCenter
             }
         }
 
-        private bool shouldNoteAppearInArea(int area)
+        private bool ShouldNoteAppearInArea(int area)
         {
 #warning update shouldNoteAppearInArea to do checks in Community Center class
             return true;
@@ -842,7 +845,7 @@ namespace CustomCommunityCenter
             }
             if (Game1.options.doesInputListContain(Game1.options.menuButton, key) && !readyToClose())
             {
-                closeBundlePage();
+                CloseBundlePage();
             }
         }
 
