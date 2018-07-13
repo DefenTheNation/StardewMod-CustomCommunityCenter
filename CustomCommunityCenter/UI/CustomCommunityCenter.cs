@@ -20,8 +20,7 @@ namespace CustomCommunityCenter
     public class CustomCommunityCenter : GameLocation
     {
         public static string CommunityCenterName = "CommunityCenter";
-
-        
+        public static string CommunityCenterMapName = "Maps\\CommunityCenter_Ruins";        
 
         public const int AREA_Pantry = 0;
 
@@ -101,8 +100,9 @@ namespace CustomCommunityCenter
             }
         }
 
-        public CustomCommunityCenter() : base("Maps\\CommunityCenter_Ruins", CommunityCenterName)
+        public CustomCommunityCenter() : base(CommunityCenterMapName, CommunityCenterName)
         {
+
         }
 
         protected override void initNetFields()

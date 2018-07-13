@@ -10,19 +10,21 @@ namespace CustomCommunityCenter
     {
         protected string bundleTextureName = "LooseSprites\\JunimoNote";
 
+        public CommunityCenterHelper ModAPI { get; set; }
+
         public override void Entry(IModHelper helper)
         {
             var config = helper.ReadConfig<ModConfig>();
-            if(config == null)
+            if(config == null || config.BundleRooms == null)
             {
                 Monitor.Log("Warning: No config found. Generating vanilla config...");
                 config = new ModConfig
                 {
                     Enabled = true,
-                    Bundles = GetVanillaCommunityCenterInfo()
+                    BundleRooms = GetVanillaCommunityCenterInfo()
                 };
 
-                helper.WriteConfig<ModConfig>(config);
+                helper.WriteConfig(config);
             }
             else if(!config.Enabled)
             {
@@ -30,7 +32,9 @@ namespace CustomCommunityCenter
                 return;
             }
 
-            helper.ConsoleCommands.Add("show", "Shows Bundle Menu", (string command, string[] arguments) =>
+            ModAPI = new CommunityCenterHelper(helper, config);
+
+             helper.ConsoleCommands.Add("show", "Shows Bundle Menu", (string command, string[] arguments) =>
             {
                 bool fromGameMenu = false;
                 int areaIndex = 0;
@@ -39,7 +43,7 @@ namespace CustomCommunityCenter
 
                 Game1.player.mailbox.Add("canReadJunimoText");
 
-                CustomJunimoNoteMenu menu = new CustomJunimoNoteMenu(config.Bundles, areaIndex, fromGameMenu, false);
+                CustomJunimoNoteMenu menu = new CustomJunimoNoteMenu(config.BundleRooms, areaIndex, fromGameMenu, false);
                 Game1.activeClickableMenu = menu;
             });
 
@@ -55,16 +59,16 @@ namespace CustomCommunityCenter
                     Monitor.Log("Usage: giveitems intBundleIndex\nex: giveitems 0 ", LogLevel.Warn);
                     return;
                 }
-                if (index < 0 || config.Bundles.Count <= index)
+                if (index < 0 || config.BundleRooms.Count <= index)
                 {
-                    Monitor.Log("Warning: Bundle Index outside bounds of bundle array. Use index between 0 and " + (config.Bundles.Count - 1) + " (inclusive)");
+                    Monitor.Log("Warning: Bundle Index outside bounds of bundle array. Use index between 0 and " + (config.BundleRooms.Count - 1) + " (inclusive)");
                     return;
                 }
 
                 bool itemsAdded = false;
                 int cashAdded = 0;
                 List<Item> itemList = new List<Item>();
-                foreach(var bundle in config.Bundles[index].Bundles)
+                foreach(var bundle in config.BundleRooms[index].Bundles)
                 {
                     foreach(var ingredient in bundle.Ingredients)
                     {
@@ -101,13 +105,7 @@ namespace CustomCommunityCenter
             });
 
             Monitor.Log("Initialized");
-        }
-
-        protected void RemoveAndReplaceLocation(GameLocation toRemove, GameLocation toReplace)
-        {
-            Game1.locations.Remove(toRemove);
-            Game1.locations.Add(toReplace);
-        }
+        }       
 
         public static List<BundleAreaInfo> GetVanillaCommunityCenterInfo()
         {

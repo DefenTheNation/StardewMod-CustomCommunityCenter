@@ -100,7 +100,9 @@ namespace CustomCommunityCenter
 
             foreach (var bundle in bundles)
             {
-                bundle.DepositsAllowed = false;
+#warning debug statement
+                //bundle.DepositsAllowed = false;
+                bundle.DepositsAllowed = true;
             }
 
             if (Game1.options.SnappyMenus)
@@ -347,7 +349,7 @@ namespace CustomCommunityCenter
         {
             if(!FromGameMenu)
             {
-                ((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).restoreAreaCutscene(areaIndex);
+                ((CustomCommunityCenter)Game1.getLocationFromName("CommunityCenter")).restoreAreaCutscene(areaIndex);
             }
         }
 
@@ -392,7 +394,7 @@ namespace CustomCommunityCenter
             }
             else
             {
-                Junimo i = ((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).getJunimoForArea(areaIndex);
+                Junimo i = ((CustomCommunityCenter)Game1.getLocationFromName("CommunityCenter")).getJunimoForArea(areaIndex);
                 i?.bringBundleBackToHut(Bundle.getColorFromColorIndex(currentPageBundle.BundleColor), Game1.getLocationFromName("CommunityCenter"));
             }
 
@@ -537,7 +539,7 @@ namespace CustomCommunityCenter
             if (!ViewingSpecificBundle)
             {
                 b.Draw(noteTexture, new Vector2((float)base.xPositionOnScreen, (float)base.yPositionOnScreen), new Rectangle(0, 0, 320, 180), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.1f);
-                SpriteText.drawStringHorizontallyCenteredAt(b, ScrambledText ? CommunityCenter.getAreaEnglishDisplayNameFromNumber(areaIndex) : CommunityCenter.getAreaDisplayNameFromNumber(areaIndex), base.xPositionOnScreen + base.width / 2 + 16, base.yPositionOnScreen + 12, 999999, -1, 99999, 0.88f, 0.88f, ScrambledText, -1);
+                SpriteText.drawStringHorizontallyCenteredAt(b, ScrambledText ? CustomCommunityCenter.getAreaEnglishDisplayNameFromNumber(areaIndex) : CustomCommunityCenter.getAreaDisplayNameFromNumber(areaIndex), base.xPositionOnScreen + base.width / 2 + 16, base.yPositionOnScreen + 12, 999999, -1, 99999, 0.88f, 0.88f, ScrambledText, -1);
                 if (ScrambledText)
                 {
                     SpriteText.drawString(b, LocalizedContentManager.CurrentLanguageLatin ? Game1.content.LoadString("Strings\\StringsFromCSFiles:JunimoNoteMenu.cs.10786") : Game1.content.LoadBaseString("Strings\\StringsFromCSFiles:JunimoNoteMenu.cs.10786"), base.xPositionOnScreen + 96, base.yPositionOnScreen + 96, 999999, base.width - 192, 99999, 0.88f, 0.88f, true, -1, "", -1);
@@ -737,7 +739,7 @@ namespace CustomCommunityCenter
                                 else
                                 {
 #warning set junimo to get star for plaque
-                                    Junimo k = ((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).getJunimoForArea(areaIndex);
+                                    Junimo k = ((CustomCommunityCenter)Game1.getLocationFromName("CommunityCenter")).getJunimoForArea(areaIndex);
                                     k?.bringBundleBackToHut(Bundle.getColorFromColorIndex(currentPageBundle.BundleColor), Game1.getLocationFromName("CommunityCenter"));
                                 }
                             }
@@ -854,7 +856,7 @@ namespace CustomCommunityCenter
             base.receiveGamePadButton(b);
             if (FromGameMenu)
             {
-                CommunityCenter cc = Game1.getLocationFromName("CommunityCenter") as CommunityCenter;
+                CustomCommunityCenter cc = Game1.getLocationFromName("CommunityCenter") as CustomCommunityCenter;
                 switch (b)
                 {
                     case Buttons.RightTrigger:
