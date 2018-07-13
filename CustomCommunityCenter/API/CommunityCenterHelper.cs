@@ -6,6 +6,7 @@ using StardewValley.Locations;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace CustomCommunityCenter
 {
@@ -35,17 +36,55 @@ namespace CustomCommunityCenter
             SaveEvents.AfterCreate += InjectCommunityCenter;
         }
 
-        public virtual void PresaveData(object sender, EventArgs e)
+        public void SetBundleAreas(IList<BundleAreaInfo> bundleAreas)
         {
-            RemoveAndReplaceLocation(customCommunityCenter, communityCenter);
+            Config.BundleRooms = bundleAreas.ToList();
+            BundleAreas = Config.BundleRooms;
 
+            ModHelper.WriteConfig(Config);
+        }
+
+        public void AddBundle(string bundleAreaName, BundleInfo bundle)
+        {
+            foreach(var bundleArea in BundleAreas)
+            {
+                if(bundleArea.Name == bundleAreaName)
+                {
+                    bundleArea.Bundles.Add(bundle);
+                    break;
+                }
+            }
+        }
+
+        public void RemoveBundle(string bundleAreaName, string bundleName)
+        {
+            foreach(var bundleArea in BundleAreas)
+            {
+                if(bundleArea.Name == bundleAreaName)
+                {
+                    for (int i = 0; i < bundleArea.Bundles.Count; i++)
+                    {
+                        if (bundleArea.Bundles[i].Name == bundleName)
+                        {
+                            bundleArea.Bundles.RemoveAt(i);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        protected virtual void SaveFarmProgress()
+        {
             string saveDataPath = GetSaveDataPath();
             var saveData = new SaveData()
             {
                 BundleRooms = new List<BundleAreaSaveData>()
             };
 
-            foreach(var bundleArea in Config.BundleRooms)
+            foreach (var bundleArea in Config.BundleRooms)
             {
                 BundleAreaSaveData bundleAreaSaveData = new BundleAreaSaveData()
                 {
@@ -54,7 +93,7 @@ namespace CustomCommunityCenter
                 };
                 saveData.BundleRooms.Add(bundleAreaSaveData);
 
-                foreach(var bundle in bundleArea.Bundles)
+                foreach (var bundle in bundleArea.Bundles)
                 {
                     BundleSaveData bundleSaveData = new BundleSaveData()
                     {
@@ -64,7 +103,7 @@ namespace CustomCommunityCenter
                     };
                     bundleAreaSaveData.Bundles.Add(bundleSaveData);
 
-                    foreach(var ingredient in bundle.Ingredients)
+                    foreach (var ingredient in bundle.Ingredients)
                     {
                         IngredientSaveData ingredientSaveData = new IngredientSaveData()
                         {
@@ -79,13 +118,11 @@ namespace CustomCommunityCenter
                 }
             }
 
-            ModHelper.WriteJsonFile(saveDataPath, saveData);           
+            ModHelper.WriteJsonFile(saveDataPath, saveData);
         }
 
-        public virtual void InjectCommunityCenter(object sender, EventArgs e)
+        protected virtual void LoadFarmProgress()
         {
-            RemoveAndReplaceLocation(communityCenter, customCommunityCenter);
-
             string saveDataPath = GetSaveDataPath();
             var saveData = ModHelper.ReadJsonFile<SaveData>(saveDataPath);
 
@@ -95,12 +132,12 @@ namespace CustomCommunityCenter
             BundleSaveData bundleSaveData;
             IngredientSaveData ingredientSaveData;
 
-            foreach(var bundleArea in Config.BundleRooms)
+            foreach (var bundleArea in Config.BundleRooms)
             {
                 bundleAreaSaveData = null;
-                foreach(var saveBundleArea in saveData.BundleRooms)
+                foreach (var saveBundleArea in saveData.BundleRooms)
                 {
-                    if(saveBundleArea.Name == bundleArea.Name)
+                    if (saveBundleArea.Name == bundleArea.Name)
                     {
                         bundleAreaSaveData = saveBundleArea;
                         break;
@@ -108,13 +145,13 @@ namespace CustomCommunityCenter
                 }
 
                 if (bundleAreaSaveData == null) continue;
-                
-                foreach(var bundle in bundleArea.Bundles)
+
+                foreach (var bundle in bundleArea.Bundles)
                 {
                     bundleSaveData = null;
-                    foreach(var bundleSave in bundleAreaSaveData.Bundles)
+                    foreach (var bundleSave in bundleAreaSaveData.Bundles)
                     {
-                        if(bundleSave.Name == bundle.Name)
+                        if (bundleSave.Name == bundle.Name)
                         {
                             bundleSaveData = bundleSave;
                             break;
@@ -124,12 +161,12 @@ namespace CustomCommunityCenter
                     if (bundleSaveData == null) continue;
 
                     bundle.Collected = bundleSaveData.Collected;
-                    foreach(var ingredient in bundle.Ingredients)
+                    foreach (var ingredient in bundle.Ingredients)
                     {
                         ingredientSaveData = null;
-                        foreach(var ingredientSave in bundleSaveData.Ingredients)
+                        foreach (var ingredientSave in bundleSaveData.Ingredients)
                         {
-                            if(ingredientSave.ItemId == ingredient.ItemId && ingredientSave.ItemQuality == ingredient.ItemQuality
+                            if (ingredientSave.ItemId == ingredient.ItemId && ingredientSave.ItemQuality == ingredient.ItemQuality
                                 && ingredientSave.RequiredStack == ingredient.RequiredStack)
                             {
                                 ingredientSaveData = ingredientSave;
@@ -143,16 +180,26 @@ namespace CustomCommunityCenter
                     }
                 }
             }
-
-            
         }
 
-        public virtual string GetSaveDataPath()
+        protected virtual void PresaveData(object sender, EventArgs e)
+        {
+            SaveFarmProgress();
+            RemoveAndReplaceLocation(customCommunityCenter, communityCenter);     
+        }
+
+        protected virtual void InjectCommunityCenter(object sender, EventArgs e)
+        {
+            LoadFarmProgress();
+            RemoveAndReplaceLocation(communityCenter, customCommunityCenter);     
+        }
+
+        protected virtual string GetSaveDataPath()
         {
             return Path.Combine("saveData", Constants.SaveFolderName + ".json");
         }
 
-        protected void RemoveAndReplaceLocation(GameLocation toRemove, GameLocation toReplace)
+        protected virtual void RemoveAndReplaceLocation(GameLocation toRemove, GameLocation toReplace)
         {
             Game1.locations.Remove(toRemove);
             Game1.locations.Add(toReplace);
