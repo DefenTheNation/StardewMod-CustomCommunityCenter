@@ -1,4 +1,4 @@
-﻿namespace CustomCommunityCenter
+﻿namespace CustomCommunityCenter.Data
 {
     public class BundleIngredientInfo
     {

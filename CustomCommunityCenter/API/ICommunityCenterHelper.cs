@@ -1,4 +1,6 @@
-﻿namespace CustomCommunityCenter.API
+﻿using CustomCommunityCenter.Data;
+
+namespace CustomCommunityCenter.API
 {
     public interface ICommunityCenterHelper
     {

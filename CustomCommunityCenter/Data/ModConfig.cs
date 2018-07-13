@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace CustomCommunityCenter
+namespace CustomCommunityCenter.Data
 {
     public class ModConfig
     {

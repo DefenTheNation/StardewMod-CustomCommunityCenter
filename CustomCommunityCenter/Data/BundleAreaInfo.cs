@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace CustomCommunityCenter
+namespace CustomCommunityCenter.Data
 {
     public class BundleAreaInfo
     {

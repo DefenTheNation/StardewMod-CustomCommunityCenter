@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CustomCommunityCenter.Data
+namespace CustomCommunityCenter.SaveData
 {
-    public class SaveData
+    public class FarmSaveData
     {
         public List<BundleAreaSaveData> BundleRooms { get; set; }
     }

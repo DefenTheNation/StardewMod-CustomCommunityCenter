@@ -1,4 +1,5 @@
 ﻿using System;
+using CustomCommunityCenter.Data;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
@@ -26,7 +27,7 @@ namespace CustomCommunityCenter
         public const int Color_Teal = 6;
 
         private int completionTimer;     
-        private int ingredientSlots;
+        private readonly int ingredientSlots;
 
         private float maxShake;
         private bool shakeLeft;
@@ -53,15 +54,15 @@ namespace CustomCommunityCenter
             sprite.sourceRect.X += sprite.sourceRect.Width;
             if (name.ToLower().Contains(Game1.currentSeason) && !BundleInfo.Completed)
             {
-                shake(0.07363108f);
+                Shake(0.07363108f);
             }
             if (BundleInfo.Completed)
             {
-                completionAnimation(false, 0);
+                CompletionAnimation(false, 0);
             }
         }
 
-        public void tryHoverAction(int x, int y)
+        public void TryHoverAction(int x, int y)
         {
             if (base.bounds.Contains(x, y) && !BundleInfo.Completed)
             {
@@ -77,7 +78,7 @@ namespace CustomCommunityCenter
             }
         }
 
-        public Item tryToDepositThisItem(Item item, ClickableTextureComponent slot, string noteTextureName)
+        public Item TryToDepositThisItem(Item item, ClickableTextureComponent slot, string noteTextureName)
         {
             if (!DepositsAllowed)
             {
@@ -134,11 +135,11 @@ namespace CustomCommunityCenter
             sprite.draw(b, true, 0, 0, 1f);
         }
 
-        public void completionAnimation(bool playSound = true, int delay = 0)
+        public void CompletionAnimation(bool playSound = true, int delay = 0)
         {
             if (delay <= 0)
             {
-                completionAnimation(playSound);
+                CompletionAnimation(playSound);
             }
             else
             {
@@ -146,13 +147,13 @@ namespace CustomCommunityCenter
             }
         }
 
-        public void shakeAndAllowClicking(int extraInfo)
+        public void ShakeAndAllowClicking(int extraInfo)
         {
             maxShake = 0.07363108f;
             CustomJunimoNoteMenu.canClick = true;
         }
 
-        public static Color getColorFromColorIndex(int color)
+        public static Color GetColorFromColorIndex(int color)
         {
             switch (color)
             {
@@ -175,11 +176,11 @@ namespace CustomCommunityCenter
             }
         }
 
-        internal void completionAnimation(CustomJunimoNoteMenu customJunimoNoteMenu, bool playSound = true, int delay = 0)
+        internal void CompletionAnimation(CustomJunimoNoteMenu customJunimoNoteMenu, bool playSound = true, int delay = 0)
         {
             if (delay <= 0)
             {
-                completionAnimation(playSound);
+                CompletionAnimation(playSound);
             }
             else
             {
@@ -187,7 +188,7 @@ namespace CustomCommunityCenter
             }
         }
 
-        private void completionAnimation(bool playSound = true)
+        private void CompletionAnimation(bool playSound = true)
         {
             if (Game1.activeClickableMenu != null && Game1.activeClickableMenu is CustomJunimoNoteMenu menu)
             {
@@ -201,7 +202,7 @@ namespace CustomCommunityCenter
             sprite.interval = 50f;
             sprite.totalNumberOfLoops = 0;
             sprite.holdLastFrame = true;
-            sprite.endFunction = shake;
+            sprite.endFunction = Shake;
             sprite.extraInfoForEndBehavior = 1;
 
             if (completed)
@@ -220,14 +221,14 @@ namespace CustomCommunityCenter
                     Game1.playSound("dwop");
                 }
                 base.bounds.Inflate(64, 64);
-                CustomJunimoNoteMenu.tempSprites.AddRange(Utility.sparkleWithinArea(base.bounds, 8, getColorFromColorIndex(BundleColor) * 0.5f, 100, 0, ""));
+                CustomJunimoNoteMenu.tempSprites.AddRange(Utility.sparkleWithinArea(base.bounds, 8, GetColorFromColorIndex(BundleColor) * 0.5f, 100, 0, ""));
                 base.bounds.Inflate(-64, -64);
             }
 
             completed = true;
         }
 
-        public void shake(float force = 0.07363108f)
+        public void Shake(float force = 0.07363108f)
         {
             if (sprite.paused)
             {
@@ -235,18 +236,18 @@ namespace CustomCommunityCenter
             }
         }
 
-        public void shake(int extraInfo)
+        public void Shake(int extraInfo)
         {
             maxShake = 0.07363108f;
             if (extraInfo == 1)
             {
                 Game1.playSound("leafrustle");
-                CustomJunimoNoteMenu.tempSprites.Add(new TemporaryAnimatedSprite(50, sprite.position, getColorFromColorIndex(BundleColor), 8, false, 100f, 0, -1, -1f, -1, 0)
+                CustomJunimoNoteMenu.tempSprites.Add(new TemporaryAnimatedSprite(50, sprite.position, GetColorFromColorIndex(BundleColor), 8, false, 100f, 0, -1, -1f, -1, 0)
                 {
                     motion = new Vector2(-1f, 0.5f),
                     acceleration = new Vector2(0f, 0.02f)
                 });
-                CustomJunimoNoteMenu.tempSprites.Add(new TemporaryAnimatedSprite(50, sprite.position, getColorFromColorIndex(BundleColor), 8, false, 100f, 0, -1, -1f, -1, 0)
+                CustomJunimoNoteMenu.tempSprites.Add(new TemporaryAnimatedSprite(50, sprite.position, GetColorFromColorIndex(BundleColor), 8, false, 100f, 0, -1, -1f, -1, 0)
                 {
                     motion = new Vector2(1f, 0.5f),
                     acceleration = new Vector2(0f, 0.02f),
@@ -256,7 +257,7 @@ namespace CustomCommunityCenter
             }
         }
 
-        public void update(GameTime time)
+        public void Update(GameTime time)
         {
             sprite.update(time);
             if (completionTimer > 0 && CustomJunimoNoteMenu.screenSwipe == null)
@@ -264,12 +265,12 @@ namespace CustomCommunityCenter
                 completionTimer -= time.ElapsedGameTime.Milliseconds;
                 if (completionTimer <= 0)
                 {
-                    completionAnimation(true);
+                    CompletionAnimation(true);
                 }
             }
             if (Game1.random.NextDouble() < 0.005 && (BundleInfo.Completed || base.name.ToLower().Contains(Game1.currentSeason)))
             {
-                shake(0.07363108f);
+                Shake(0.07363108f);
             }
             if (maxShake > 0f)
             {
@@ -297,7 +298,7 @@ namespace CustomCommunityCenter
             }
         }
 
-        internal bool canAcceptThisItem(Item heldItem, ClickableTextureComponent slot)
+        internal bool CanAcceptThisItem(Item heldItem, ClickableTextureComponent slot)
         {
             if (slot.item != null) return false;
             else if(!(heldItem is StardewValley.Object)) return false;

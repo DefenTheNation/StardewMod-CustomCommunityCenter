@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CustomCommunityCenter
+namespace CustomCommunityCenter.SaveData
 {
     public class IngredientSaveData
     {

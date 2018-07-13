@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using CustomCommunityCenter.Data;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using StardewValley;
@@ -371,7 +372,7 @@ namespace CustomCommunityCenter
 #warning notify community center to check for new junimo notes
             //((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).checkForNewJunimoNotes();
             screenSwipe = new ScreenSwipe(0, -1f, -1);
-            currentPageBundle.completionAnimation(this, true, 400);
+            currentPageBundle.CompletionAnimation(this, true, 400);
             canClick = false;
 #warning sync bundles in multiplayer and send multiplayer chat message
             //((NetDictionary<int, bool, NetBool, SerializableDictionary<int, bool>, NetIntDictionary<bool, NetBool>>)((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).bundleRewards)[currentPageBundle.bundleIndex] = true;
@@ -645,7 +646,7 @@ namespace CustomCommunityCenter
         {
             foreach (var bundle in bundles)
             {
-                bundle.update(time);
+                bundle.Update(time);
             }
 
             for (int i = tempSprites.Count - 1; i >= 0; i--)
@@ -700,7 +701,7 @@ namespace CustomCommunityCenter
                                 {
                                     if (IngredientSlots[m].item == null)
                                     {
-                                        heldItem = currentPageBundle.tryToDepositThisItem(heldItem, IngredientSlots[m], "LooseSprites\\JunimoNote");
+                                        heldItem = currentPageBundle.TryToDepositThisItem(heldItem, IngredientSlots[m], "LooseSprites\\JunimoNote");
                                         CheckIfBundleIsComplete();
                                         return;
                                     }
@@ -710,7 +711,7 @@ namespace CustomCommunityCenter
                             {
                                 if (IngredientSlots[l].containsPoint(x, y) && IngredientSlots[l].item == null)
                                 {
-                                    heldItem = currentPageBundle.tryToDepositThisItem(heldItem, IngredientSlots[l], "LooseSprites\\JunimoNote");
+                                    heldItem = currentPageBundle.TryToDepositThisItem(heldItem, IngredientSlots[l], "LooseSprites\\JunimoNote");
                                     CheckIfBundleIsComplete();
                                 }
                             }
@@ -723,7 +724,7 @@ namespace CustomCommunityCenter
                             {
                                 Game1.player.Money -= moneyRequired;
                                 Game1.playSound("select");
-                                currentPageBundle.completionAnimation(this, true, 0);
+                                currentPageBundle.CompletionAnimation(this, true, 0);
                                 if (PurchaseButton != null)
                                 {
                                     PurchaseButton.scale = PurchaseButton.baseScale * 0.75f;
@@ -931,7 +932,7 @@ namespace CustomCommunityCenter
                     {
                         foreach(var slot in IngredientSlots)
                         {
-                            if (slot.bounds.Contains(x, y) && currentPageBundle.canAcceptThisItem(heldItem, slot))
+                            if (slot.bounds.Contains(x, y) && currentPageBundle.CanAcceptThisItem(heldItem, slot))
                             {
                                 slot.sourceRect.X = 530;
                                 slot.sourceRect.Y = 262;
@@ -956,7 +957,7 @@ namespace CustomCommunityCenter
                     }
                     foreach (var bundle in bundles)
                     {
-                        bundle.tryHoverAction(x, y);
+                        bundle.TryHoverAction(x, y);
                     }
                     if (FromGameMenu)
                     {

@@ -1,4 +1,6 @@
-﻿using StardewModdingAPI;
+﻿using CustomCommunityCenter.API;
+using CustomCommunityCenter.Data;
+using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using StardewValley.Objects;
@@ -105,7 +107,12 @@ namespace CustomCommunityCenter
             });
 
             Monitor.Log("Initialized");
-        }       
+        }
+
+        public override object GetApi()
+        {
+            return (ICommunityCenterHelper) ModAPI;
+        }
 
         public static List<BundleAreaInfo> GetVanillaCommunityCenterInfo()
         {

@@ -1,6 +1,5 @@
-﻿namespace CustomCommunityCenter
+﻿namespace CustomCommunityCenter.Data
 {
-
     public enum ItemType
     {
         Object = 0,

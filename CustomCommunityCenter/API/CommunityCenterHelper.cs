@@ -1,4 +1,5 @@
 ﻿using CustomCommunityCenter.Data;
+using CustomCommunityCenter.SaveData;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -8,7 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace CustomCommunityCenter
+namespace CustomCommunityCenter.API
 {
     public class CommunityCenterHelper
     {
@@ -79,7 +80,7 @@ namespace CustomCommunityCenter
         protected virtual void SaveFarmProgress()
         {
             string saveDataPath = GetSaveDataPath();
-            var saveData = new SaveData()
+            var saveData = new FarmSaveData()
             {
                 BundleRooms = new List<BundleAreaSaveData>()
             };
@@ -124,7 +125,7 @@ namespace CustomCommunityCenter
         protected virtual void LoadFarmProgress()
         {
             string saveDataPath = GetSaveDataPath();
-            var saveData = ModHelper.ReadJsonFile<SaveData>(saveDataPath);
+            var saveData = ModHelper.ReadJsonFile<FarmSaveData>(saveDataPath);
 
             if (saveData == null || saveData.BundleRooms == null) return;
 

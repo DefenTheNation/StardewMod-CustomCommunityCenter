@@ -63,12 +63,12 @@
     <Compile Include="API\CommunityCenterHelper.cs" />
     <Compile Include="API\ICommunityCenterHelper.cs" />
     <Compile Include="Data\BundleAreaInfo.cs" />
-    <Compile Include="Data\BundleAreaSaveData.cs" />
+    <Compile Include="SaveData\BundleAreaSaveData.cs" />
     <Compile Include="Data\BundleInfo.cs" />
     <Compile Include="Data\BundleIngredientInfo.cs" />
-    <Compile Include="Data\IngredientSaveData.cs" />
-    <Compile Include="Data\BundleSaveData.cs" />
-    <Compile Include="Data\SaveData.cs" />
+    <Compile Include="SaveData\IngredientSaveData.cs" />
+    <Compile Include="SaveData\BundleSaveData.cs" />
+    <Compile Include="SaveData\SaveData.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="UI\CustomCommunityCenter.cs" />
     <Compile Include="CustomCommunityCenterMod.cs" />
