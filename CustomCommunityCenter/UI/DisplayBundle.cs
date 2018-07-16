@@ -46,7 +46,7 @@ namespace CustomCommunityCenter
             completed = BundleInfo.Completed;
             BundleColor = bundleIndex;
 
-            sprite = new TemporaryAnimatedSprite(textureName, new Rectangle(BundleColor * 256 % 512, 244 + BundleColor * 256 / 512 * 16, 16, 16), 70f, 3, 99999, new Vector2((float)base.bounds.X, (float)base.bounds.Y), false, false, 0.8f, 0f, Color.White, 4f, 0f, 0f, 0f, false)
+            sprite = new TemporaryAnimatedSprite(textureName, new Rectangle(BundleColor * 256 % 512, 244 + BundleColor * 256 / 512 * 16, 16, 16), 70f, 3, 99999, new Vector2(base.bounds.X, base.bounds.Y), false, false, 0.8f, 0f, Color.White, 4f, 0f, 0f, 0f, false)
             {
                 pingPong = true
             };
@@ -114,7 +114,7 @@ namespace CustomCommunityCenter
 
         public void IngredientDepositAnimation(ClickableComponent slot, string noteTextureName, bool skipAnimation = false)
         {
-            TemporaryAnimatedSprite t = new TemporaryAnimatedSprite(noteTextureName, new Rectangle(530, 244, 18, 18), 50f, 6, 1, new Vector2((float)slot.bounds.X, (float)slot.bounds.Y), false, false, 0.88f, 0f, Color.White, 4f, 0f, 0f, 0f, true)
+            TemporaryAnimatedSprite t = new TemporaryAnimatedSprite(noteTextureName, new Rectangle(530, 244, 18, 18), 50f, 6, 1, new Vector2(slot.bounds.X, slot.bounds.Y), false, false, 0.88f, 0f, Color.White, 4f, 0f, 0f, 0f, true)
             {
                 holdLastFrame = true,
                 endSound = "cowboy_monsterhit"
@@ -123,7 +123,7 @@ namespace CustomCommunityCenter
             if (skipAnimation)
             {
                 t.sourceRect.Offset(t.sourceRect.Width * 5, 0);
-                t.sourceRectStartingPos = new Vector2((float)t.sourceRect.X, (float)t.sourceRect.Y);
+                t.sourceRectStartingPos = new Vector2(t.sourceRect.X, t.sourceRect.Y);
                 t.animationLength = 1;
             }
 
@@ -208,7 +208,7 @@ namespace CustomCommunityCenter
             if (completed)
             {
                 sprite.sourceRect.X += sprite.sourceRect.Width * 14;
-                sprite.sourceRectStartingPos = new Vector2((float)sprite.sourceRect.X, (float)sprite.sourceRect.Y);
+                sprite.sourceRectStartingPos = new Vector2(sprite.sourceRect.X, sprite.sourceRect.Y);
                 sprite.currentParentTileIndex = 14;
                 sprite.interval = 0f;
                 sprite.animationLength = 1;

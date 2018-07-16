@@ -111,19 +111,19 @@ namespace CustomCommunityCenter
 
         public override object GetApi()
         {
-            return (ICommunityCenterHelper) ModAPI;
+            return ModAPI;
         }
 
         public static List<BundleAreaInfo> GetVanillaCommunityCenterInfo()
         {
             List<BundleAreaInfo> bundleAreas = new List<BundleAreaInfo>();
 
-            var craftsRoom = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), Name = "Bridge Repair" };
-            var pantry = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), Name = "Greenhouse" };
-            var fishTank = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), Name = "Glittering Boulder Removed" };
-            var boilerRoom = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), Name = "Minecarts Repaired" };
-            var bulletinBoard = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), Name = "Friendship ♡" };
-            var vault = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), Name = "Bus Repair" };
+            var pantry = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), Name = "Pantry", RewardName = "Greenhouse" };
+            var craftsRoom = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), Name = "Crafts Room", RewardName = "Bridge Repair" };           
+            var fishTank = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), RewardName = "Glittering Boulder Removed" };
+            var boilerRoom = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), RewardName = "Minecarts Repaired" };
+            var bulletinBoard = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), RewardName = "Friendship ♡" };
+            var vault = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), RewardName = "Bus Repair" };
 
             bundleAreas.Add(pantry);
             bundleAreas.Add(craftsRoom);            

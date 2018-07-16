@@ -11,23 +11,20 @@ using System.Linq;
 
 namespace CustomCommunityCenter.API
 {
-    public class CommunityCenterHelper
+    public class CommunityCenterHelper : ICommunityCenterHelper
     {
         public static IList<BundleAreaInfo> BundleAreas { get; set; }
 
         protected IModHelper ModHelper { get; set; }
         protected ModConfig Config { get; set; }
 
-        internal readonly CustomCommunityCenter customCommunityCenter;
-        internal readonly CommunityCenter communityCenter;
+        internal static readonly CustomCommunityCenter CustomCommunityCenter = new CustomCommunityCenter();
+        internal static readonly CommunityCenter CommunityCenter = new CommunityCenter(CustomCommunityCenter.CommunityCenterName);
 
         public CommunityCenterHelper(IModHelper helper, ModConfig config)
         {
             ModHelper = helper;
             Config = config;
-
-            customCommunityCenter = new CustomCommunityCenter();
-            communityCenter = new CommunityCenter(CustomCommunityCenter.CommunityCenterName);
 
             BundleAreas = Config.BundleRooms;
 
@@ -49,7 +46,7 @@ namespace CustomCommunityCenter.API
         {
             foreach(var bundleArea in BundleAreas)
             {
-                if(bundleArea.Name == bundleAreaName)
+                if(bundleArea.RewardName == bundleAreaName)
                 {
                     bundleArea.Bundles.Add(bundle);
                     break;
@@ -61,7 +58,7 @@ namespace CustomCommunityCenter.API
         {
             foreach(var bundleArea in BundleAreas)
             {
-                if(bundleArea.Name == bundleAreaName)
+                if(bundleArea.RewardName == bundleAreaName)
                 {
                     for (int i = 0; i < bundleArea.Bundles.Count; i++)
                     {
@@ -89,7 +86,7 @@ namespace CustomCommunityCenter.API
             {
                 BundleAreaSaveData bundleAreaSaveData = new BundleAreaSaveData()
                 {
-                    Name = bundleArea.Name,
+                    Name = bundleArea.RewardName,
                     Bundles = new List<BundleSaveData>()
                 };
                 saveData.BundleRooms.Add(bundleAreaSaveData);
@@ -138,7 +135,7 @@ namespace CustomCommunityCenter.API
                 bundleAreaSaveData = null;
                 foreach (var saveBundleArea in saveData.BundleRooms)
                 {
-                    if (saveBundleArea.Name == bundleArea.Name)
+                    if (saveBundleArea.Name == bundleArea.RewardName)
                     {
                         bundleAreaSaveData = saveBundleArea;
                         break;
@@ -186,13 +183,13 @@ namespace CustomCommunityCenter.API
         protected virtual void PresaveData(object sender, EventArgs e)
         {
             SaveFarmProgress();
-            RemoveAndReplaceLocation(customCommunityCenter, communityCenter);     
+            RemoveAndReplaceLocation(CustomCommunityCenter, CommunityCenter);     
         }
 
         protected virtual void InjectCommunityCenter(object sender, EventArgs e)
         {
             LoadFarmProgress();
-            RemoveAndReplaceLocation(communityCenter, customCommunityCenter);     
+            RemoveAndReplaceLocation(CommunityCenter, CustomCommunityCenter);     
         }
 
         protected virtual string GetSaveDataPath()

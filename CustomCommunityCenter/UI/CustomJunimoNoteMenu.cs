@@ -1,15 +1,16 @@
-﻿using CustomCommunityCenter.Data;
+﻿using CustomCommunityCenter.API;
+using CustomCommunityCenter.Data;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using StardewValley;
 using StardewValley.BellsAndWhistles;
 using StardewValley.Characters;
-using StardewValley.Locations;
 using StardewValley.Menus;
 using StardewValley.Objects;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CustomCommunityCenter
 {
@@ -24,8 +25,8 @@ namespace CustomCommunityCenter
         public static ScreenSwipe screenSwipe;
         public static string hoverText = "";
 
-        private int areaIndex;
-        private int bundleIndex;
+        public int AreaIndex { get; protected set; }
+        public int BundleIndex { get; protected set; }
 
         private bool ViewingSpecificBundle;
         private Texture2D noteTexture;
@@ -51,7 +52,7 @@ namespace CustomCommunityCenter
         public List<ClickableTextureComponent> IngredientList { get; set; } = new List<ClickableTextureComponent>();
         public List<ClickableTextureComponent> OtherClickableComponents { get; set; } = new List<ClickableTextureComponent>();
 
-        public CustomJunimoNoteMenu(List<BundleAreaInfo> info, int index, bool _fromGameMenu, bool _fromThisMenu)
+        public CustomJunimoNoteMenu(IList<BundleAreaInfo> info, int index, bool _fromGameMenu, bool _fromThisMenu)
             : base(Game1.viewport.Width / 2 - 640, Game1.viewport.Height / 2 - 360, Width, Height, ShowCloseButton)
         {
             bundles = new List<DisplayBundle>();
@@ -59,8 +60,10 @@ namespace CustomCommunityCenter
             FromGameMenu = _fromGameMenu;
             FromThisMenu = _fromThisMenu;
 
-            bundleGroupList = info;
+            bundleGroupList = info.ToList();
             SetupMenu(index);
+
+            CustomCommunityCenter cc = CommunityCenterHelper.CustomCommunityCenter;
 
             Game1.player.forceCanMove();
             AreaNextButton = new ClickableTextureComponent(new Rectangle(base.xPositionOnScreen + base.width - 128, base.yPositionOnScreen, 48, 44), Game1.mouseCursors, new Rectangle(365, 495, 12, 11), 4f, false)
@@ -77,23 +80,20 @@ namespace CustomCommunityCenter
             };
             for (int j = 0; j < info.Count; j++)
             {
-#warning Get whether note should appear from community center
-                //if (cc.shouldNoteAppearInArea((area + j) % info.Count))
-                if(true)
+                if (cc.shouldNoteAppearInArea((AreaIndex + j) % info.Count))
                 {
                     AreaNextButton.visible = true;
                 }
             }
             for (int i = 0; i < info.Count; i++)
             {
-                int a = areaIndex - i;
+                int a = AreaIndex - i;
                 if (a == -1)
                 {
                     a = info.Count - 1;
                 }
-#warning Get whether note should appear from community center
-                // if(cc.shouldNoteAppearInArea(area))
-                if (true)
+
+                if(cc.shouldNoteAppearInArea(AreaIndex))
                 {
                     AreaBackButton.visible = true;
                 }
@@ -101,9 +101,11 @@ namespace CustomCommunityCenter
 
             foreach (var bundle in bundles)
             {
-#warning debug statement
-                //bundle.DepositsAllowed = false;
-                bundle.DepositsAllowed = true;
+                bundle.DepositsAllowed = !_fromGameMenu;
+
+                //#warning debug statement
+                //bundle.DepositsAllowed = true;
+
             }
 
             if (Game1.options.SnappyMenus)
@@ -115,12 +117,12 @@ namespace CustomCommunityCenter
 
         private string GetRewardNameForArea(int index)
         {
-            return bundleGroupList[areaIndex].Name;
+            return bundleGroupList[AreaIndex].RewardName;
         }
 
         private void SetupMenu(int area)
         {
-            areaIndex = area;
+            AreaIndex = area;
             noteTexture = Game1.temporaryContent.Load<Texture2D>(BundleTextureName);
             inventory = new InventoryMenu(xPositionOnScreen + 128, yPositionOnScreen + 140, true, null, Utility.highlightSmallObjects, 36, 6, 8, 8, false)
             {
@@ -131,7 +133,7 @@ namespace CustomCommunityCenter
             bundles.Clear();
 
             int bundlesAdded = 0;
-            var bundleInfo = bundleGroupList[areaIndex];
+            var bundleInfo = bundleGroupList[AreaIndex];
             foreach(var bundle in bundleInfo.Bundles)
             {
                 bundles.Add(new DisplayBundle(bundlesAdded, BundleTextureName, bundle, GetBundleLocationFromNumber(bundlesAdded))
@@ -339,18 +341,17 @@ namespace CustomCommunityCenter
 
         private void CompleteCommunityCenter(int areaIndex)
         {
-#warning provide reward for bundle group
-            
-            //((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).areasComplete[whichArea] = true;
-            //((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).areaCompleteReward(whichArea);
-            base.exitFunction = RestoreAreaOnExit;
+            CommunityCenterHelper.CustomCommunityCenter.areasComplete[areaIndex] = true;
+            CommunityCenterHelper.CustomCommunityCenter.areaCompleteReward(areaIndex);
+
+            exitFunction = RestoreAreaOnExit;
         }
 
         private void RestoreAreaOnExit()
         {
             if(!FromGameMenu)
             {
-                ((CustomCommunityCenter)Game1.getLocationFromName("CommunityCenter")).restoreAreaCutscene(areaIndex);
+                (CommunityCenterHelper.CustomCommunityCenter).restoreAreaCutscene(AreaIndex);
             }
         }
 
@@ -364,19 +365,20 @@ namespace CustomCommunityCenter
                 heldItem = null;
             }
 
-#warning update community center bundle status
-            //for (int j = 0; j < ((NetDictionary<int, bool[], NetArray<bool, NetBool>, SerializableDictionary<int, bool[]>, NetBundles>)((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).bundles)[currentPageBundle.bundleIndex].Length; j++)
-            //{
-            //    ((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).bundles.FieldDict[currentPageBundle.bundleIndex][j] = true;
-            //}
-#warning notify community center to check for new junimo notes
-            //((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).checkForNewJunimoNotes();
+            for (int j = 0; j < CommunityCenterHelper.CustomCommunityCenter.bundles[BundleIndex].Length; j++)
+            {
+                CommunityCenterHelper.CustomCommunityCenter.bundles.FieldDict[BundleIndex][j] = true;
+            }
+
+            CommunityCenterHelper.CustomCommunityCenter.checkForNewJunimoNotes();
             screenSwipe = new ScreenSwipe(0, -1f, -1);
             currentPageBundle.CompletionAnimation(this, true, 400);
             canClick = false;
-#warning sync bundles in multiplayer and send multiplayer chat message
-            //((NetDictionary<int, bool, NetBool, SerializableDictionary<int, bool>, NetIntDictionary<bool, NetBool>>)((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).bundleRewards)[currentPageBundle.bundleIndex] = true;
+
+            (CommunityCenterHelper.CustomCommunityCenter).bundleRewards[AreaIndex] = true;
+#warning send multiplayer chat message
             //helper.globalChatInfoMessage("Bundle");
+
             bool isOneIncomplete = false;
             foreach (var bundle in bundles)
             {
@@ -388,15 +390,14 @@ namespace CustomCommunityCenter
             }
             if (!isOneIncomplete)
             {
-#warning complete community center section and give reward
-                //((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).areasComplete[whichArea] = true;
+                CommunityCenterHelper.CustomCommunityCenter.areasComplete[AreaIndex] = true;
+                CommunityCenterHelper.CustomCommunityCenter.areaCompleteReward(AreaIndex);
                 base.exitFunction = RestoreAreaOnExit;
-                //((CommunityCenter)Game1.getLocationFromName("CommunityCenter")).areaCompleteReward(whichArea);
             }
             else
             {
-                Junimo i = ((CustomCommunityCenter)Game1.getLocationFromName("CommunityCenter")).getJunimoForArea(areaIndex);
-                i?.bringBundleBackToHut(Bundle.getColorFromColorIndex(currentPageBundle.BundleColor), Game1.getLocationFromName("CommunityCenter"));
+                Junimo i = (CommunityCenterHelper.CustomCommunityCenter).getJunimoForArea(AreaIndex);
+                i?.bringBundleBackToHut(Bundle.getColorFromColorIndex(currentPageBundle.BundleColor), CommunityCenterHelper.CustomCommunityCenter);
             }
 
             CheckForRewards();
@@ -442,8 +443,8 @@ namespace CustomCommunityCenter
             Game1.playSound("smallSelect");
             List<Item> rewards = new List<Item>();
 
-            var bundleList = bundleGroupList[areaIndex].Bundles;
-            for(int i = 0; i < bundleList.Count; i++) // (var bundle in bundleGroupList[areaIndex].Bundles)
+            var bundleList = bundleGroupList[AreaIndex].Bundles;
+            for(int i = 0; i < bundleList.Count; i++)
             {
                 if(bundleList[i].Completed && !bundleList[i].Collected)
                 {
@@ -455,19 +456,18 @@ namespace CustomCommunityCenter
 
             Game1.activeClickableMenu = new ItemGrabMenu(rewards, false, true, null, null, null, RewardGrabbed, false, true, true, true, false, 0, null, -1, null)
             {
-                exitFunction = (base.exitFunction ?? new onExit(ReOpenThisMenu))
+                exitFunction = (exitFunction ?? new onExit(ReOpenThisMenu))
             };
         }
 
         private void ReOpenThisMenu()
         {
-            Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, areaIndex, FromGameMenu, true);
-            //PresentButton = null;
+            Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, AreaIndex, FromGameMenu, true);
         }
 
         private void RewardGrabbed(Item i, Farmer who)
         {
-            bundleGroupList[areaIndex].Bundles[i.SpecialVariable].Collected = true;
+            bundleGroupList[AreaIndex].Bundles[i.SpecialVariable].Collected = true;
         }
 
         private void CloseBundlePage()
@@ -539,8 +539,8 @@ namespace CustomCommunityCenter
 
             if (!ViewingSpecificBundle)
             {
-                b.Draw(noteTexture, new Vector2((float)base.xPositionOnScreen, (float)base.yPositionOnScreen), new Rectangle(0, 0, 320, 180), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.1f);
-                SpriteText.drawStringHorizontallyCenteredAt(b, ScrambledText ? CustomCommunityCenter.getAreaEnglishDisplayNameFromNumber(areaIndex) : CustomCommunityCenter.getAreaDisplayNameFromNumber(areaIndex), base.xPositionOnScreen + base.width / 2 + 16, base.yPositionOnScreen + 12, 999999, -1, 99999, 0.88f, 0.88f, ScrambledText, -1);
+                b.Draw(noteTexture, new Vector2(base.xPositionOnScreen, base.yPositionOnScreen), new Rectangle(0, 0, 320, 180), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.1f);
+                SpriteText.drawStringHorizontallyCenteredAt(b, ScrambledText ? CustomCommunityCenter.getAreaEnglishDisplayNameFromNumber(AreaIndex) : CustomCommunityCenter.getAreaDisplayNameFromNumber(AreaIndex), base.xPositionOnScreen + base.width / 2 + 16, base.yPositionOnScreen + 12, 999999, -1, 99999, 0.88f, 0.88f, ScrambledText, -1);
                 if (ScrambledText)
                 {
                     SpriteText.drawString(b, LocalizedContentManager.CurrentLanguageLatin ? Game1.content.LoadString("Strings\\StringsFromCSFiles:JunimoNoteMenu.cs.10786") : Game1.content.LoadBaseString("Strings\\StringsFromCSFiles:JunimoNoteMenu.cs.10786"), base.xPositionOnScreen + 96, base.yPositionOnScreen + 96, 999999, base.width - 192, 99999, 0.88f, 0.88f, true, -1, "", -1);
@@ -576,18 +576,18 @@ namespace CustomCommunityCenter
             }
             else
             {
-                b.Draw(noteTexture, new Vector2((float)base.xPositionOnScreen, (float)base.yPositionOnScreen), new Rectangle(320, 0, 320, 180), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.1f);
+                b.Draw(noteTexture, new Vector2(base.xPositionOnScreen, base.yPositionOnScreen), new Rectangle(320, 0, 320, 180), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.1f);
                 if (currentPageBundle != null)
                 {
-                    b.Draw(noteTexture, new Vector2((float)(base.xPositionOnScreen + 872), (float)(base.yPositionOnScreen + 88)), new Rectangle(bundleIndex * 16 * 2 % noteTexture.Width, 180 + 32 * (bundleIndex * 16 * 2 / noteTexture.Width), 32, 32), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.15f);
+                    b.Draw(noteTexture, new Vector2(base.xPositionOnScreen + 872, base.yPositionOnScreen + 88), new Rectangle(BundleIndex * 16 * 2 % noteTexture.Width, 180 + 32 * (BundleIndex * 16 * 2 / noteTexture.Width), 32, 32), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.15f);
                     float textX = Game1.dialogueFont.MeasureString((!Game1.player.hasOrWillReceiveMail("canReadJunimoText")) ? "???" : Game1.content.LoadString("Strings\\UI:JunimoNote_BundleName", currentPageBundle.label)).X;
-                    b.Draw(noteTexture, new Vector2((float)(base.xPositionOnScreen + 936 - (int)textX / 2 - 16), (float)(base.yPositionOnScreen + 228)), new Rectangle(517, 266, 4, 17), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.1f);
+                    b.Draw(noteTexture, new Vector2(base.xPositionOnScreen + 936 - (int)textX / 2 - 16, base.yPositionOnScreen + 228), new Rectangle(517, 266, 4, 17), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.1f);
                     b.Draw(noteTexture, new Rectangle(base.xPositionOnScreen + 936 - (int)textX / 2, base.yPositionOnScreen + 228, (int)textX, 68), new Rectangle(520, 266, 1, 17), Color.White, 0f, Vector2.Zero, SpriteEffects.None, 0.1f);
-                    b.Draw(noteTexture, new Vector2((float)(base.xPositionOnScreen + 936 + (int)textX / 2), (float)(base.yPositionOnScreen + 228)), new Rectangle(524, 266, 4, 17), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.1f);
-                    b.DrawString(Game1.dialogueFont, (!Game1.player.hasOrWillReceiveMail("canReadJunimoText")) ? "???" : Game1.content.LoadString("Strings\\UI:JunimoNote_BundleName", currentPageBundle.label), new Vector2((float)(base.xPositionOnScreen + 936) - textX / 2f, (float)(base.yPositionOnScreen + 244)) + new Vector2(2f, 2f), Game1.textShadowColor);
-                    b.DrawString(Game1.dialogueFont, (!Game1.player.hasOrWillReceiveMail("canReadJunimoText")) ? "???" : Game1.content.LoadString("Strings\\UI:JunimoNote_BundleName", currentPageBundle.label), new Vector2((float)(base.xPositionOnScreen + 936) - textX / 2f, (float)(base.yPositionOnScreen + 244)) + new Vector2(0f, 2f), Game1.textShadowColor);
-                    b.DrawString(Game1.dialogueFont, (!Game1.player.hasOrWillReceiveMail("canReadJunimoText")) ? "???" : Game1.content.LoadString("Strings\\UI:JunimoNote_BundleName", currentPageBundle.label), new Vector2((float)(base.xPositionOnScreen + 936) - textX / 2f, (float)(base.yPositionOnScreen + 244)) + new Vector2(2f, 0f), Game1.textShadowColor);
-                    b.DrawString(Game1.dialogueFont, (!Game1.player.hasOrWillReceiveMail("canReadJunimoText")) ? "???" : Game1.content.LoadString("Strings\\UI:JunimoNote_BundleName", currentPageBundle.label), new Vector2((float)(base.xPositionOnScreen + 936) - textX / 2f, (float)(base.yPositionOnScreen + 244)), Game1.textColor * 0.9f);
+                    b.Draw(noteTexture, new Vector2(base.xPositionOnScreen + 936 + (int)textX / 2, base.yPositionOnScreen + 228), new Rectangle(524, 266, 4, 17), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.1f);
+                    b.DrawString(Game1.dialogueFont, (!Game1.player.hasOrWillReceiveMail("canReadJunimoText")) ? "???" : Game1.content.LoadString("Strings\\UI:JunimoNote_BundleName", currentPageBundle.label), new Vector2(base.xPositionOnScreen + 936 - textX / 2f, base.yPositionOnScreen + 244) + new Vector2(2f, 2f), Game1.textShadowColor);
+                    b.DrawString(Game1.dialogueFont, (!Game1.player.hasOrWillReceiveMail("canReadJunimoText")) ? "???" : Game1.content.LoadString("Strings\\UI:JunimoNote_BundleName", currentPageBundle.label), new Vector2(base.xPositionOnScreen + 936 - textX / 2f, base.yPositionOnScreen + 244) + new Vector2(0f, 2f), Game1.textShadowColor);
+                    b.DrawString(Game1.dialogueFont, (!Game1.player.hasOrWillReceiveMail("canReadJunimoText")) ? "???" : Game1.content.LoadString("Strings\\UI:JunimoNote_BundleName", currentPageBundle.label), new Vector2(base.xPositionOnScreen + 936 - textX / 2f, base.yPositionOnScreen + 244) + new Vector2(2f, 0f), Game1.textShadowColor);
+                    b.DrawString(Game1.dialogueFont, (!Game1.player.hasOrWillReceiveMail("canReadJunimoText")) ? "???" : Game1.content.LoadString("Strings\\UI:JunimoNote_BundleName", currentPageBundle.label), new Vector2(base.xPositionOnScreen + 936 - textX / 2f, base.yPositionOnScreen + 244), Game1.textColor * 0.9f);
                 }
                 BackButton.draw(b);
                 if (PurchaseButton != null)
@@ -606,14 +606,14 @@ namespace CustomCommunityCenter
 
                 IngredientList.ForEach(x =>
                 {
-                    b.Draw(Game1.shadowTexture, new Vector2((float)(x.bounds.Center.X - Game1.shadowTexture.Bounds.Width * 4 / 2 - 4), (float)(x.bounds.Center.Y + 4)), Game1.shadowTexture.Bounds, Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.1f);
+                    b.Draw(Game1.shadowTexture, new Vector2(x.bounds.Center.X - Game1.shadowTexture.Bounds.Width * 4 / 2 - 4, x.bounds.Center.Y + 4), Game1.shadowTexture.Bounds, Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.1f);
                     x.drawItem(b, 0, 0);
                 });
 
                 inventory.draw(b);
             }
 
-            SpriteText.drawStringWithScrollCenteredAt(b, GetRewardNameForArea(areaIndex), base.xPositionOnScreen + base.width / 2, Math.Min(base.yPositionOnScreen + base.height + 20, Game1.viewport.Height - 64 - 8), "", 1f, -1, 0, 0.88f, false);
+            SpriteText.drawStringWithScrollCenteredAt(b, GetRewardNameForArea(AreaIndex), base.xPositionOnScreen + base.width / 2, Math.Min(base.yPositionOnScreen + base.height + 20, Game1.viewport.Height - 64 - 8), "", 1f, -1, 0, 0.88f, false);
             base.draw(b);
             Game1.mouseCursorTransparency = 1f;
 
@@ -623,7 +623,7 @@ namespace CustomCommunityCenter
             }
             if (heldItem != null)
             {
-                heldItem.drawInMenu(b, new Vector2((float)(Game1.getOldMouseX() + 16), (float)(Game1.getOldMouseY() + 16)), 1f);
+                heldItem.drawInMenu(b, new Vector2(Game1.getOldMouseX() + 16, Game1.getOldMouseY() + 16), 1f);
             }
             if (inventory.descriptionText.Length > 0)
             {
@@ -719,7 +719,7 @@ namespace CustomCommunityCenter
                         if (PurchaseButton != null && PurchaseButton.containsPoint(x, y))
                         {
                             int moneyRequired = currentPageBundle.BundleInfo.PurchaseAmount;
-                            //int moneyRequired = 0;
+
                             if (Game1.player.Money >= moneyRequired)
                             {
                                 Game1.player.Money -= moneyRequired;
@@ -733,15 +733,15 @@ namespace CustomCommunityCenter
                                 currentPageBundle.BundleInfo.PurchaseCompleted();
                                 CheckForRewards();
 
-                                if (bundleGroupList[areaIndex].Completed)
+                                if (bundleGroupList[AreaIndex].Completed)
                                 {
-                                    CompleteCommunityCenter(areaIndex);
+                                    CompleteCommunityCenter(AreaIndex);
                                 }
                                 else
                                 {
-#warning set junimo to get star for plaque
-                                    Junimo k = ((CustomCommunityCenter)Game1.getLocationFromName("CommunityCenter")).getJunimoForArea(areaIndex);
-                                    k?.bringBundleBackToHut(Bundle.getColorFromColorIndex(currentPageBundle.BundleColor), Game1.getLocationFromName("CommunityCenter"));
+                                    CustomCommunityCenter cc = CommunityCenterHelper.CustomCommunityCenter;
+                                    Junimo k = cc.getJunimoForArea(AreaIndex);
+                                    k?.bringBundleBackToHut(Bundle.getColorFromColorIndex(currentPageBundle.BundleColor), cc);
                                 }
                             }
                             else
@@ -760,7 +760,7 @@ namespace CustomCommunityCenter
                         {
                             if (bundles[i].CanBeClicked() && bundles[i].containsPoint(x, y))
                             {
-                                bundleIndex = i;
+                                BundleIndex = i;
                                 SetupBundleSpecificPage(bundles[i]);
                                 Game1.playSound("shwip");
                                 return;
@@ -777,16 +777,16 @@ namespace CustomCommunityCenter
                             {
                                 for (int j = 1; j < 7; j++)
                                 {
-                                    if (ShouldNoteAppearInArea((areaIndex + j) % 6))
+                                    if (ShouldNoteAppearInArea((AreaIndex + j) % 6))
                                     {
-                                        Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, (areaIndex + j) % 6, FromGameMenu, true);
+                                        Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, (AreaIndex + j) % 6, FromGameMenu, true);
                                         return;
                                     }
                                 }
                             }
                             else if (AreaBackButton.containsPoint(x, y))
                             {
-                                int area = areaIndex;
+                                int area = AreaIndex;
                                 for (int i = 1; i < 7; i++)
                                 {
                                     area--;
@@ -815,8 +815,7 @@ namespace CustomCommunityCenter
 
         private bool ShouldNoteAppearInArea(int area)
         {
-#warning update shouldNoteAppearInArea to do checks in Community Center class
-            return true;
+            return CommunityCenterHelper.CustomCommunityCenter.shouldNoteAppearInArea(area);
         }
 
         public override void receiveRightClick(int x, int y, bool playSound = true)
@@ -857,7 +856,7 @@ namespace CustomCommunityCenter
             base.receiveGamePadButton(b);
             if (FromGameMenu)
             {
-                CustomCommunityCenter cc = Game1.getLocationFromName("CommunityCenter") as CustomCommunityCenter;
+                var cc = CommunityCenterHelper.CustomCommunityCenter;
                 switch (b)
                 {
                     case Buttons.RightTrigger:
@@ -867,7 +866,7 @@ namespace CustomCommunityCenter
                             {
                                 if (j < 7)
                                 {
-                                    if (!cc.shouldNoteAppearInArea((areaIndex + j) % 6))
+                                    if (!cc.shouldNoteAppearInArea((AreaIndex + j) % 6))
                                     {
                                         j++;
                                         continue;
@@ -876,12 +875,12 @@ namespace CustomCommunityCenter
                                 }
                                 return;
                             }
-                            Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, (areaIndex + j) % 6, FromGameMenu, true);
+                            Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, (AreaIndex + j) % 6, FromGameMenu, true);
                             break;
                         }
                     case Buttons.LeftTrigger:
                         {
-                            int area = areaIndex;
+                            int area = AreaIndex;
                             int i = 1;
                             while (true)
                             {

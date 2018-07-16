@@ -1,11 +1,10 @@
-﻿using Microsoft.Xna.Framework;
+﻿using CustomCommunityCenter.API;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using Netcode;
 using StardewValley;
 using StardewValley.Characters;
-using StardewValley.Locations;
-using StardewValley.Menus;
 using StardewValley.Network;
 using System;
 using System.Collections.Generic;
@@ -102,7 +101,8 @@ namespace CustomCommunityCenter
 
         public CustomCommunityCenter() : base(CommunityCenterMapName, CommunityCenterName)
         {
-
+            initNetFields();
+            initAreaBundleConversions();
         }
 
         protected override void initNetFields()
@@ -182,15 +182,15 @@ namespace CustomCommunityCenter
                 StaticTile[] tileFrames = getJunimoNoteTileFrames(area);
                 string layer = (area == 5) ? "Front" : "Buildings";
                 base.map.GetLayer(layer).Tiles[position.X, position.Y] = new AnimatedTile(base.map.GetLayer(layer), tileFrames, 70L);
-                Game1.currentLightSources.Add(new LightSource(4, new Vector2((float)(position.X * 64), (float)(position.Y * 64)), 1f));
-                base.temporarySprites.Add(new TemporaryAnimatedSprite(6, new Vector2((float)(position.X * 64), (float)(position.Y * 64)), Color.White, 8, false, 100f, 0, -1, -1f, -1, 0)
+                Game1.currentLightSources.Add(new LightSource(4, new Vector2(position.X * 64, position.Y * 64), 1f));
+                base.temporarySprites.Add(new TemporaryAnimatedSprite(6, new Vector2(position.X * 64, position.Y * 64), Color.White, 8, false, 100f, 0, -1, -1f, -1, 0)
                 {
                     layerDepth = 1f,
                     interval = 50f,
                     motion = new Vector2(1f, 0f),
                     acceleration = new Vector2(-0.005f, 0f)
                 });
-                base.temporarySprites.Add(new TemporaryAnimatedSprite(6, new Vector2((float)(position.X * 64 - 12), (float)(position.Y * 64 - 12)), Color.White, 8, false, 100f, 0, -1, -1f, -1, 0)
+                base.temporarySprites.Add(new TemporaryAnimatedSprite(6, new Vector2(position.X * 64 - 12, position.Y * 64 - 12), Color.White, 8, false, 100f, 0, -1, -1f, -1, 0)
                 {
                     scale = 0.75f,
                     layerDepth = 1f,
@@ -199,7 +199,7 @@ namespace CustomCommunityCenter
                     acceleration = new Vector2(-0.005f, 0f),
                     delayBeforeAnimationStart = 50
                 });
-                base.temporarySprites.Add(new TemporaryAnimatedSprite(6, new Vector2((float)(position.X * 64 - 12), (float)(position.Y * 64 + 12)), Color.White, 8, false, 100f, 0, -1, -1f, -1, 0)
+                base.temporarySprites.Add(new TemporaryAnimatedSprite(6, new Vector2(position.X * 64 - 12, position.Y * 64 + 12), Color.White, 8, false, 100f, 0, -1, -1f, -1, 0)
                 {
                     layerDepth = 1f,
                     interval = 50f,
@@ -207,7 +207,7 @@ namespace CustomCommunityCenter
                     acceleration = new Vector2(-0.005f, 0f),
                     delayBeforeAnimationStart = 100
                 });
-                base.temporarySprites.Add(new TemporaryAnimatedSprite(6, new Vector2((float)(position.X * 64), (float)(position.Y * 64)), Color.White, 8, false, 100f, 0, -1, -1f, -1, 0)
+                base.temporarySprites.Add(new TemporaryAnimatedSprite(6, new Vector2(position.X * 64, position.Y * 64), Color.White, 8, false, 100f, 0, -1, -1f, -1, 0)
                 {
                     layerDepth = 1f,
                     scale = 0.75f,
@@ -222,21 +222,12 @@ namespace CustomCommunityCenter
         public int numberOfCompleteBundles()
         {
             int number = 0;
-            foreach (KeyValuePair<int, bool[]> pair in bundles.Pairs)
+
+            foreach(var bundleArea in CommunityCenterHelper.BundleAreas)
             {
-                number++;
-                int i = 0;
-                while (i < pair.Value.Length)
-                {
-                    if (pair.Value[i])
-                    {
-                        i++;
-                        continue;
-                    }
-                    number--;
-                    break;
-                }
+                number += bundleArea.BundlesCompleted;
             }
+
             return number;
         }
 
@@ -304,7 +295,7 @@ namespace CustomCommunityCenter
         {
             bundleMutexes[area].RequestLock(delegate
             {
-                Game1.activeClickableMenu = new JunimoNoteMenu(area, bundlesDict());
+                Game1.activeClickableMenu = new CustomJunimoNoteMenu(CommunityCenterHelper.BundleAreas, area, false, false);
             }, null);
         }
 
@@ -328,7 +319,7 @@ namespace CustomCommunityCenter
             {
                 for (int i = 0; i < areasComplete.Count; i++)
                 {
-                    if (!isJunimoNoteAtArea(i) && shouldNoteAppearInArea(i))
+                    if (!isJunimoNoteAtArea(i) && shouldNoteAppearInArea(i) && (junimoNotesViewportTargets == null || !junimoNotesViewportTargets.Contains(i)))
                     {
                         addJunimoNoteViewportTarget(i);
                     }
@@ -363,31 +354,33 @@ namespace CustomCommunityCenter
         {
             if (area >= 0 && areasComplete.Count > area && !areasComplete[area])
             {
+                int completedBundles = numberOfCompleteBundles();
+
                 switch (area)
                 {
                     case 1:
                         return true;
                     case 0:
                     case 2:
-                        if (numberOfCompleteBundles() <= 0)
+                        if (completedBundles <= 0)
                         {
                             break;
                         }
                         return true;
                     case 3:
-                        if (numberOfCompleteBundles() <= 1)
+                        if (completedBundles <= 1)
                         {
                             break;
                         }
                         return true;
                     case 5:
-                        if (numberOfCompleteBundles() <= 2)
+                        if (completedBundles <= 2)
                         {
                             break;
                         }
                         return true;
                     case 4:
-                        if (numberOfCompleteBundles() <= 3)
+                        if (completedBundles <= 3)
                         {
                             break;
                         }
@@ -420,7 +413,7 @@ namespace CustomCommunityCenter
                 {
                     if (shouldNoteAppearInArea(i))
                     {
-                        base.characters.Add(new Junimo(new Vector2((float)getNotePosition(i).X, (float)(getNotePosition(i).Y + 2)) * 64f, i, false));
+                        base.characters.Add(new Junimo(new Vector2(getNotePosition(i).X, getNotePosition(i).Y + 2) * 64f, i, false));
                     }
                 }
             }
@@ -522,9 +515,9 @@ namespace CustomCommunityCenter
 
         public bool isBundleComplete(int bundleIndex)
         {
-            for (int i = 0; i < ((NetDictionary<int, bool[], NetArray<bool, NetBool>, SerializableDictionary<int, bool[]>, NetBundles>)bundles)[bundleIndex].Length; i++)
+            for (int i = 0; i < bundles[bundleIndex].Length; i++)
             {
-                if (!((NetDictionary<int, bool[], NetArray<bool, NetBool>, SerializableDictionary<int, bool[]>, NetBundles>)bundles)[bundleIndex][i])
+                if (!bundles[bundleIndex][i])
                 {
                     return false;
                 }
@@ -607,15 +600,15 @@ namespace CustomCommunityCenter
                     }
                     if (refurbishedMap.GetLayer("Paths").Tiles[x, y] != null && refurbishedMap.GetLayer("Paths").Tiles[x, y].TileIndex == 8)
                     {
-                        Game1.currentLightSources.Add(new LightSource(4, new Vector2((float)(x * 64), (float)(y * 64)), 2f));
+                        Game1.currentLightSources.Add(new LightSource(4, new Vector2(x * 64, y * 64), 2f));
                     }
                     if (showEffects && Game1.random.NextDouble() < 0.58 && refurbishedMap.GetLayer("Buildings").Tiles[x, y] == null)
                     {
-                        base.temporarySprites.Add(new TemporaryAnimatedSprite(6, new Vector2((float)(x * 64), (float)(y * 64)), Color.White, 8, false, 100f, 0, -1, -1f, -1, 0)
+                        base.temporarySprites.Add(new TemporaryAnimatedSprite(6, new Vector2(x * 64, y * 64), Color.White, 8, false, 100f, 0, -1, -1f, -1, 0)
                         {
                             layerDepth = 1f,
                             interval = 50f,
-                            motion = new Vector2((float)Game1.random.Next(17) / 10f, 0f),
+                            motion = new Vector2(Game1.random.Next(17) / 10f, 0f),
                             acceleration = new Vector2(-0.005f, 0f),
                             delayBeforeAnimationStart = Game1.random.Next(500)
                         });
@@ -814,7 +807,7 @@ namespace CustomCommunityCenter
                 Game1.freezeControls = true;
                 int area = junimoNotesViewportTargets[0];
                 Point p = getNotePosition(area);
-                Game1.moveViewportTo(new Vector2((float)p.X, (float)p.Y) * 64f, 5f, 2000, afterViewportGetsToJunimoNotePosition, setViewportToNextJunimoNoteTarget);
+                Game1.moveViewportTo(new Vector2(p.X, p.Y) * 64f, 5f, 2000, afterViewportGetsToJunimoNotePosition, setViewportToNextJunimoNoteTarget);
             }
             else
             {
@@ -838,7 +831,7 @@ namespace CustomCommunityCenter
         {
             foreach (NPC character in base.characters)
             {
-                if (character is Junimo && (int)(character as Junimo).whichArea.Value == whichArea)
+                if (character is Junimo && (character as Junimo).whichArea.Value == whichArea)
                 {
                     return character as Junimo;
                 }
@@ -876,7 +869,7 @@ namespace CustomCommunityCenter
                 getJunimoForArea(i).IsInvisible = false;
                 getJunimoForArea(i).setAlpha(1f);
             }
-            Game1.moveViewportTo(new Vector2((float)Game1.player.getStandingX(), (float)Game1.player.getStandingY()), 2f, 5000, startGoodbyeDance, endGoodbyeDance);
+            Game1.moveViewportTo(new Vector2(Game1.player.getStandingX(), Game1.player.getStandingY()), 2f, 5000, startGoodbyeDance, endGoodbyeDance);
             Game1.viewportFreeze = false;
             Game1.freezeControls = true;
         }
@@ -957,9 +950,9 @@ namespace CustomCommunityCenter
                 Junimo i = getJunimoForArea(0);
                 if (i != null)
                 {
-                    b.Draw(i.Sprite.Texture, new Vector2((float)(Game1.viewport.Width / 2 - 32), (float)(Game1.viewport.Height * 2) / 3f - 64f), new Microsoft.Xna.Framework.Rectangle((int)(Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 800.0) / 100 * 16, 0, 16, 16), Color.Lime * messageAlpha, 0f, new Vector2((float)(i.Sprite.SpriteWidth * 4 / 2), (float)(i.Sprite.SpriteHeight * 4) * 3f / 4f) / 4f, Math.Max(0.2f, 1f) * 4f, i.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 1f);
+                    b.Draw(i.Sprite.Texture, new Vector2(Game1.viewport.Width / 2 - 32, Game1.viewport.Height * 2 / 3f - 64f), new Microsoft.Xna.Framework.Rectangle((int)(Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 800.0) / 100 * 16, 0, 16, 16), Color.Lime * messageAlpha, 0f, new Vector2(i.Sprite.SpriteWidth * 4 / 2, (i.Sprite.SpriteHeight * 4) * 3f / 4f) / 4f, Math.Max(0.2f, 1f) * 4f, i.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 1f);
                 }
-                b.DrawString(Game1.dialogueFont, "\"" + Game1.parseText(getMessageForAreaCompletion() + "\"", Game1.dialogueFont, 640), new Vector2((float)(Game1.viewport.Width / 2 - 320), (float)(Game1.viewport.Height * 2) / 3f), Game1.textColor * messageAlpha * 0.6f);
+                b.DrawString(Game1.dialogueFont, "\"" + Game1.parseText(getMessageForAreaCompletion() + "\"", Game1.dialogueFont, 640), new Vector2(Game1.viewport.Width / 2 - 320, Game1.viewport.Height * 2 / 3f), Game1.textColor * messageAlpha * 0.6f);
             }
         }
 
@@ -986,12 +979,14 @@ namespace CustomCommunityCenter
 
         public static string getAreaEnglishDisplayNameFromNumber(int areaNumber)
         {
-            return Game1.content.LoadBaseString("Strings\\Locations:CommunityCenter_AreaName_" + getAreaNameFromNumber(areaNumber).Replace(" ", ""));
+            return CommunityCenterHelper.BundleAreas[areaNumber].Name;
+            //return Game1.content.LoadBaseString("Strings\\Locations:CommunityCenter_AreaName_" + getAreaNameFromNumber(areaNumber).Replace(" ", ""));
         }
 
         public static string getAreaDisplayNameFromNumber(int areaNumber)
         {
-            return Game1.content.LoadString("Strings\\Locations:CommunityCenter_AreaName_" + getAreaNameFromNumber(areaNumber).Replace(" ", ""));
+            return CommunityCenterHelper.BundleAreas[areaNumber].Name;
+            //return Game1.content.LoadString("Strings\\Locations:CommunityCenter_AreaName_" + getAreaNameFromNumber(areaNumber).Replace(" ", ""));
         }
 
         private StaticTile[] getJunimoNoteTileFrames(int area)
