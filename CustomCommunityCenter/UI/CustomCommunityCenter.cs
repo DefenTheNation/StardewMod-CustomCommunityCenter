@@ -81,12 +81,16 @@ namespace CustomCommunityCenter
 
         private Cue buildUpSound;
 
+
+        private NetBundles _bundles;
+
         [XmlElement("bundles")]
         public NetBundles bundles
         {
             get
             {
-                return Game1.netWorldState.Value.Bundles;
+                //return Game1.netWorldState.Value.Bundles;
+                return _bundles;
             }
         }
 
@@ -101,12 +105,18 @@ namespace CustomCommunityCenter
 
         public CustomCommunityCenter() : base(CommunityCenterMapName, CommunityCenterName)
         {
+            areasComplete = new NetArray<bool, NetBool>(CommunityCenterHelper.BundleAreas.Count);
+
             initNetFields();
             initAreaBundleConversions();
         }
 
         protected override void initNetFields()
         {
+            // Read data from mod config
+            setupNetFieldsFromModConfig();
+
+            // Continue net field initialization
             base.initNetFields();
             base.NetFields.AddFields(warehouse, areasComplete, numberOfStarsOnPlaque, newJunimoNoteCheckEvent, restoreAreaCutsceneEvent, areaCompleteRewardEvent);
             newJunimoNoteCheckEvent.onEvent += doCheckForNewJunimoNotes;
@@ -114,11 +124,46 @@ namespace CustomCommunityCenter
             areaCompleteRewardEvent.onEvent += doAreaCompleteReward;
         }
 
+        protected virtual void setupNetFieldsFromModConfig()
+        {
+            var bundleAreas = CommunityCenterHelper.BundleAreas;
+
+            // Bundle Areas
+            for(int i = 0; i < bundleAreas.Count; i++)
+            {
+                areasComplete[i] = bundleAreas[i].Completed;
+            }
+
+            // Bundles
+            _bundles = new NetBundles();
+            for(int i = 0; i < bundleAreas.Count; i++)
+            {
+                bool[] bundleFlag = new bool[bundleAreas[i].Bundles.Count];
+                for(int j = 0; j < bundleAreas[i].Bundles.Count; j++)
+                {
+                    bundleFlag[j] = bundleAreas[i].Bundles[j].Completed;
+                }
+
+                _bundles.Add(i, bundleFlag);
+
+                for(int j = 0; j < bundleAreas[i].Bundles.Count; j++)
+                {
+                    NetArray<bool, NetBool> ingredientFlag = new NetArray<bool, NetBool>();
+                    for(int k = 0; k < bundleAreas[i].Bundles[j].Ingredients.Count; k++)
+                    {
+                        ingredientFlag.Add(bundleAreas[i].Bundles[j].Ingredients[k].Completed);
+                    }
+                }
+            }
+
+            // Ingredients
+        }
+
         private void initAreaBundleConversions()
         {
             areaToBundleDictionary = new Dictionary<int, List<int>>();
             bundleToAreaDictionary = new Dictionary<int, int>();
-            for (int j = 0; j < 6; j++)
+            for (int j = 0; j < CommunityCenterHelper.BundleAreas.Count; j++)
             {
                 areaToBundleDictionary.Add(j, new List<int>());
                 NetMutex i = new NetMutex();
@@ -129,28 +174,35 @@ namespace CustomCommunityCenter
 
         private int getAreaNumberFromName(string name)
         {
-            switch (name)
+            for(int i = 0; i < CommunityCenterHelper.BundleAreas.Count; i++)
             {
-                case "Pantry":
-                    return 0;
-                case "Crafts Room":
-                case "CraftsRoom":
-                    return 1;
-                case "Fish Tank":
-                case "FishTank":
-                    return 2;
-                case "Boiler Room":
-                case "BoilerRoom":
-                    return 3;
-                case "Vault":
-                    return 4;
-                case "BulletinBoard":
-                case "Bulletin Board":
-                case "Bulletin":
-                    return 5;
-                default:
-                    return -1;
+                if (CommunityCenterHelper.BundleAreas[i].Name == name) return i;
             }
+
+            return -1;
+
+            //switch (name)
+            //{
+            //    case "Pantry":
+            //        return 0;
+            //    case "Crafts Room":
+            //    case "CraftsRoom":
+            //        return 1;
+            //    case "Fish Tank":
+            //    case "FishTank":
+            //        return 2;
+            //    case "Boiler Room":
+            //    case "BoilerRoom":
+            //        return 3;
+            //    case "Vault":
+            //        return 4;
+            //    case "BulletinBoard":
+            //    case "Bulletin Board":
+            //    case "Bulletin":
+            //        return 5;
+            //    default:
+            //        return -1;
+            //}
         }
 
         private Point getNotePosition(int area)
@@ -958,23 +1010,24 @@ namespace CustomCommunityCenter
 
         public static string getAreaNameFromNumber(int areaNumber)
         {
-            switch (areaNumber)
-            {
-                case 3:
-                    return "Boiler Room";
-                case 5:
-                    return "Bulletin Board";
-                case 1:
-                    return "Crafts Room";
-                case 2:
-                    return "Fish Tank";
-                case 0:
-                    return "Pantry";
-                case 4:
-                    return "Vault";
-                default:
-                    return "";
-            }
+            return CommunityCenterHelper.BundleAreas[areaNumber].Name;
+            //switch (areaNumber)
+            //{
+            //    case 3:
+            //        return "Boiler Room";
+            //    case 5:
+            //        return "Bulletin Board";
+            //    case 1:
+            //        return "Crafts Room";
+            //    case 2:
+            //        return "Fish Tank";
+            //    case 0:
+            //        return "Pantry";
+            //    case 4:
+            //        return "Vault";
+            //    default:
+            //        return "";
+            //}
         }
 
         public static string getAreaEnglishDisplayNameFromNumber(int areaNumber)
