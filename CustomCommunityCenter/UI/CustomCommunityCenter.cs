@@ -8,6 +8,7 @@ using StardewValley.Characters;
 using StardewValley.Network;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Xml.Serialization;
 using xTile;
@@ -143,19 +144,9 @@ namespace CustomCommunityCenter
                 }
 
                 bundles.Add(i, ingredients);
-
-                // Ingredients
-                //for (int j = 0; j < bundleAreas[i].Bundles.Count; j++)
-                //{
-                //    NetArray<bool, NetBool> ingredientFlag = new NetArray<bool, NetBool>();
-                //    for(int k = 0; k < bundleAreas[i].Bundles[j].Ingredients.Count; k++)
-                //    {
-                //        ingredientFlag.Add(bundleAreas[i].Bundles[j].Ingredients[k].Completed);
-                //    }
-
-                //    bundles.Add()
-                //}
             }
+
+            Debug.WriteLine("Netfields updated!");
         }
 
         private void initAreaBundleConversions()

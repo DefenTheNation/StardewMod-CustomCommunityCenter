@@ -365,12 +365,12 @@ namespace CustomCommunityCenter
                 heldItem = null;
             }
 
-            for (int j = 0; j < CommunityCenterHelper.CustomCommunityCenter.bundles[BundleIndex].Length; j++)
+            for (int j = 0; j < CommunityCenterHelper.CustomCommunityCenter.bundles[AreaIndex].Length; j++)
             {
-                CommunityCenterHelper.CustomCommunityCenter.bundles.FieldDict[BundleIndex][j] = true;
+                CommunityCenterHelper.WorldState.Bundles.FieldDict[AreaIndex][j] = true;
             }
 
-
+            CommunityCenterHelper.BundleComplete();
 
             CommunityCenterHelper.CustomCommunityCenter.checkForNewJunimoNotes();
             screenSwipe = new ScreenSwipe(0, -1f, -1);
@@ -395,6 +395,9 @@ namespace CustomCommunityCenter
             {
                 CommunityCenterHelper.CustomCommunityCenter.areasComplete[AreaIndex] = true;
                 CommunityCenterHelper.CustomCommunityCenter.areaCompleteReward(AreaIndex);
+
+                CommunityCenterHelper.BundleAreaComplete();
+
                 base.exitFunction = RestoreAreaOnExit;
             }
             else

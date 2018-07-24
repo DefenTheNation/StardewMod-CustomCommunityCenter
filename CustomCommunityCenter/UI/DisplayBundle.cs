@@ -1,4 +1,5 @@
 ﻿using System;
+using CustomCommunityCenter.API;
 using CustomCommunityCenter.Data;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -98,6 +99,9 @@ namespace CustomCommunityCenter
 
                         slot.sourceRect.X = 512;
                         slot.sourceRect.Y = 244;
+
+                        CommunityCenterHelper.IngredientComplete();
+
                         break;
                     }
                 }

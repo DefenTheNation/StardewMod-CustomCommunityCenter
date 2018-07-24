@@ -1,5 +1,6 @@
 ﻿using CustomCommunityCenter.API;
 using CustomCommunityCenter.Data;
+using Netcode;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
@@ -36,7 +37,7 @@ namespace CustomCommunityCenter
 
             ModAPI = new CommunityCenterHelper(helper, config);
 
-             helper.ConsoleCommands.Add("show", "Shows Bundle Menu", (string command, string[] arguments) =>
+            helper.ConsoleCommands.Add("show", "Shows Bundle Menu", (string command, string[] arguments) =>
             {
                 bool fromGameMenu = false;
                 int areaIndex = 0;
@@ -106,9 +107,33 @@ namespace CustomCommunityCenter
                 }
             });
 
-            Monitor.Log("Initialized");
+            helper.ConsoleCommands.Add("shownet", "Shows Bundle Menu", (string command, string[] arguments) =>
+            {
+                int count = 0;
+                string output = "";
+                foreach(var item in CommunityCenterHelper.WorldState.Bundles.Values)
+                {
+                    output = "Bundle id " + count + ":\n";
+                    for(int i = 0; i < item.Length; i++)
+                    {
+                        output += i + ": " + item[i] + "\n";
+                    }
+                    output += "\n";
+                    count++;
 
-            
+                    Monitor.Log(output);
+                }
+
+                count = 0;
+                foreach(var item in CommunityCenterHelper.WorldState.BundleRewards.Values)
+                {
+                    output = "Reward " + count + ": " + item;
+                    count++;
+                    Monitor.Log(output);
+                }
+            });
+
+            Monitor.Log("Initialized");
         }
 
         public override object GetApi()

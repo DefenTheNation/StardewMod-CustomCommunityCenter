@@ -35,16 +35,6 @@ namespace CustomCommunityCenter.API
             MultiplayerHelper = helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
             WorldState = helper.Reflection.GetField<NetRoot<IWorldState>>(typeof(Game1), "netWorldState").GetValue().Value;
 
-            //CommunityCenter = new CommunityCenter(CustomCommunityCenter.CommunityCenterName);
-            for(int i = 0; i < Game1.locations.Count; i++)
-            {
-                if(Game1.locations[i].Name == CustomCommunityCenter.CommunityCenterName)
-                {
-                    CommunityCenter = Game1.locations[i] as CommunityCenter;
-                    break;
-                }
-            }
-
             CustomCommunityCenter = new CustomCommunityCenter();
 
             SaveEvents.BeforeSave += PresaveData;
@@ -66,6 +56,21 @@ namespace CustomCommunityCenter.API
             }
 
             return -1;
+        }
+
+        public static void IngredientComplete()
+        {
+            CustomCommunityCenter.SetupNetFieldsFromModConfig();
+        }
+
+        public static void BundleComplete()
+        {
+            CustomCommunityCenter.SetupNetFieldsFromModConfig();
+        }
+
+        public static void BundleAreaComplete()
+        {
+            CustomCommunityCenter.SetupNetFieldsFromModConfig();
         }
 
         public void SetBundleAreas(IList<BundleAreaInfo> bundleAreas)
@@ -159,6 +164,16 @@ namespace CustomCommunityCenter.API
             var saveData = ModHelper.ReadJsonFile<FarmSaveData>(saveDataPath);
 
             if (saveData == null || saveData.BundleRooms == null) return;
+
+            // Get community center location
+            for (int i = 0; i < Game1.locations.Count; i++)
+            {
+                if (Game1.locations[i].Name == CustomCommunityCenter.CommunityCenterName)
+                {
+                    CommunityCenter = Game1.locations[i] as CommunityCenter;
+                    break;
+                }
+            }
 
             BundleAreaSaveData bundleAreaSaveData;
             BundleSaveData bundleSaveData;
