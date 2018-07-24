@@ -93,7 +93,7 @@ namespace CustomCommunityCenter
                     a = info.Count - 1;
                 }
 
-                if(cc.shouldNoteAppearInArea(AreaIndex))
+                if (cc.shouldNoteAppearInArea(AreaIndex))
                 {
                     AreaBackButton.visible = true;
                 }
@@ -134,7 +134,7 @@ namespace CustomCommunityCenter
 
             int bundlesAdded = 0;
             var bundleInfo = bundleGroupList[AreaIndex];
-            foreach(var bundle in bundleInfo.Bundles)
+            foreach (var bundle in bundleInfo.Bundles)
             {
                 bundles.Add(new DisplayBundle(bundlesAdded, BundleTextureName, bundle, GetBundleLocationFromNumber(bundlesAdded))
                 {
@@ -167,7 +167,7 @@ namespace CustomCommunityCenter
             ViewingSpecificBundle = true;
             currentPageBundle = bundle;
 
-            if(bundle.BundleInfo.IsPurchase)
+            if (bundle.BundleInfo.IsPurchase)
             {
                 SetupPurchaseBundle(bundle);
             }
@@ -176,7 +176,7 @@ namespace CustomCommunityCenter
                 SetupRegularBundle(bundle);
             }
 
-            
+
         }
 
         private void SetupPurchaseBundle(DisplayBundle bundle)
@@ -349,7 +349,7 @@ namespace CustomCommunityCenter
 
         private void RestoreAreaOnExit()
         {
-            if(!FromGameMenu)
+            if (!FromGameMenu)
             {
                 (CommunityCenterHelper.CustomCommunityCenter).restoreAreaCutscene(AreaIndex);
             }
@@ -370,14 +370,17 @@ namespace CustomCommunityCenter
                 CommunityCenterHelper.CustomCommunityCenter.bundles.FieldDict[BundleIndex][j] = true;
             }
 
+
+
             CommunityCenterHelper.CustomCommunityCenter.checkForNewJunimoNotes();
             screenSwipe = new ScreenSwipe(0, -1f, -1);
             currentPageBundle.CompletionAnimation(this, true, 400);
             canClick = false;
 
-            (CommunityCenterHelper.CustomCommunityCenter).bundleRewards[AreaIndex] = true;
-#warning send multiplayer chat message
-            //helper.globalChatInfoMessage("Bundle");
+            int bundleRewardIndex = CommunityCenterHelper.GetBundleRewardIndex(AreaIndex, BundleIndex);
+            CommunityCenterHelper.CustomCommunityCenter.bundleRewards[bundleRewardIndex] = true;
+
+            CommunityCenterHelper.MultiplayerHelper.globalChatInfoMessage("Bundle");
 
             bool isOneIncomplete = false;
             foreach (var bundle in bundles)
@@ -444,9 +447,9 @@ namespace CustomCommunityCenter
             List<Item> rewards = new List<Item>();
 
             var bundleList = bundleGroupList[AreaIndex].Bundles;
-            for(int i = 0; i < bundleList.Count; i++)
+            for (int i = 0; i < bundleList.Count; i++)
             {
-                if(bundleList[i].Completed && !bundleList[i].Collected)
+                if (bundleList[i].Completed && !bundleList[i].Collected)
                 {
                     var rewardItem = ObjectFactory.getItemFromDescription((byte)bundleList[i].RewardItemType, bundleList[i].RewardItemId, bundleList[i].RewardItemStack);
                     rewardItem.SpecialVariable = i;
@@ -562,7 +565,7 @@ namespace CustomCommunityCenter
 
                 tempSprites.ForEach(x => x.draw(b, true, 0, 0, 1f));
 
-                if(FromGameMenu)
+                if (FromGameMenu)
                 {
                     if (AreaNextButton.visible)
                     {
@@ -860,49 +863,49 @@ namespace CustomCommunityCenter
                 switch (b)
                 {
                     case Buttons.RightTrigger:
+                    {
+                        int j = 1;
+                        while (true)
                         {
-                            int j = 1;
-                            while (true)
+                            if (j < 7)
                             {
-                                if (j < 7)
+                                if (!cc.shouldNoteAppearInArea((AreaIndex + j) % 6))
                                 {
-                                    if (!cc.shouldNoteAppearInArea((AreaIndex + j) % 6))
-                                    {
-                                        j++;
-                                        continue;
-                                    }
-                                    break;
+                                    j++;
+                                    continue;
                                 }
-                                return;
+                                break;
                             }
-                            Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, (AreaIndex + j) % 6, FromGameMenu, true);
-                            break;
+                            return;
                         }
+                        Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, (AreaIndex + j) % 6, FromGameMenu, true);
+                        break;
+                    }
                     case Buttons.LeftTrigger:
+                    {
+                        int area = AreaIndex;
+                        int i = 1;
+                        while (true)
                         {
-                            int area = AreaIndex;
-                            int i = 1;
-                            while (true)
+                            if (i < 7)
                             {
-                                if (i < 7)
+                                area--;
+                                if (area == -1)
                                 {
-                                    area--;
-                                    if (area == -1)
-                                    {
-                                        area = 5;
-                                    }
-                                    if (!cc.shouldNoteAppearInArea(area))
-                                    {
-                                        i++;
-                                        continue;
-                                    }
-                                    break;
+                                    area = 5;
                                 }
-                                return;
+                                if (!cc.shouldNoteAppearInArea(area))
+                                {
+                                    i++;
+                                    continue;
+                                }
+                                break;
                             }
-                            Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, area, FromGameMenu, true);
-                            break;
+                            return;
                         }
+                        Game1.activeClickableMenu = new CustomJunimoNoteMenu(bundleGroupList, area, FromGameMenu, true);
+                        break;
+                    }
                 }
             }
         }
@@ -918,7 +921,7 @@ namespace CustomCommunityCenter
                     BackButton.tryHover(x, y, 0.1f);
                     hoveredItem = inventory.hover(x, y, heldItem);
 
-                    foreach(var ingredient in IngredientList)
+                    foreach (var ingredient in IngredientList)
                     {
                         if (ingredient.bounds.Contains(x, y))
                         {
@@ -926,10 +929,10 @@ namespace CustomCommunityCenter
                             break;
                         }
                     }
-              
+
                     if (heldItem != null)
                     {
-                        foreach(var slot in IngredientSlots)
+                        foreach (var slot in IngredientSlots)
                         {
                             if (slot.bounds.Contains(x, y) && currentPageBundle.CanAcceptThisItem(heldItem, slot))
                             {
@@ -1066,6 +1069,6 @@ namespace CustomCommunityCenter
             }
             return false;
         }
-       
+
     }
 }

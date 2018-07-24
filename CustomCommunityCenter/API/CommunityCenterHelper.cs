@@ -1,9 +1,11 @@
 ﻿using CustomCommunityCenter.Data;
 using CustomCommunityCenter.SaveData;
+using Netcode;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Locations;
+using StardewValley.Network;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,13 +15,15 @@ namespace CustomCommunityCenter.API
 {
     public class CommunityCenterHelper : ICommunityCenterHelper
     {
+        public static IWorldState WorldState { get; set; }
+        public static Multiplayer MultiplayerHelper { get; set; }
         public static IList<BundleAreaInfo> BundleAreas { get; set; }
 
         protected IModHelper ModHelper { get; set; }
         protected ModConfig Config { get; set; }
 
-        internal static readonly CustomCommunityCenter CustomCommunityCenter = new CustomCommunityCenter();
-        internal static readonly CommunityCenter CommunityCenter = new CommunityCenter(CustomCommunityCenter.CommunityCenterName);
+        internal static CustomCommunityCenter CustomCommunityCenter;
+        internal static CommunityCenter CommunityCenter;
 
         public CommunityCenterHelper(IModHelper helper, ModConfig config)
         {
@@ -28,10 +32,40 @@ namespace CustomCommunityCenter.API
 
             BundleAreas = Config.BundleRooms;
 
+            MultiplayerHelper = helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
+            WorldState = helper.Reflection.GetField<NetRoot<IWorldState>>(typeof(Game1), "netWorldState").GetValue().Value;
+
+            //CommunityCenter = new CommunityCenter(CustomCommunityCenter.CommunityCenterName);
+            for(int i = 0; i < Game1.locations.Count; i++)
+            {
+                if(Game1.locations[i].Name == CustomCommunityCenter.CommunityCenterName)
+                {
+                    CommunityCenter = Game1.locations[i] as CommunityCenter;
+                    break;
+                }
+            }
+
+            CustomCommunityCenter = new CustomCommunityCenter();
+
             SaveEvents.BeforeSave += PresaveData;
             SaveEvents.AfterSave += InjectCommunityCenter;
             SaveEvents.AfterLoad += InjectCommunityCenter;
             SaveEvents.AfterCreate += InjectCommunityCenter;
+        }
+
+        public static int GetBundleRewardIndex(int areaIndex, int bundleIndex)
+        {
+            int bundleRewardIndex = 0;
+            for (int i = 0; i < BundleAreas.Count; i++)
+            {
+                for (int j = 0; j < BundleAreas[i].Bundles.Count; j++)
+                {
+                    if (i == areaIndex && j == bundleIndex) return bundleRewardIndex;
+                    bundleRewardIndex++;
+                }
+            }
+
+            return -1;
         }
 
         public void SetBundleAreas(IList<BundleAreaInfo> bundleAreas)
@@ -178,6 +212,9 @@ namespace CustomCommunityCenter.API
                     }
                 }
             }
+
+            // Now that config is loaded, update the net fields
+            CustomCommunityCenter.SetupNetFieldsFromModConfig();
         }
 
         protected virtual void PresaveData(object sender, EventArgs e)
@@ -189,7 +226,7 @@ namespace CustomCommunityCenter.API
         protected virtual void InjectCommunityCenter(object sender, EventArgs e)
         {
             LoadFarmProgress();
-            RemoveAndReplaceLocation(CommunityCenter, CustomCommunityCenter);     
+            RemoveAndReplaceLocation(CommunityCenter, CustomCommunityCenter);
         }
 
         protected virtual string GetSaveDataPath()

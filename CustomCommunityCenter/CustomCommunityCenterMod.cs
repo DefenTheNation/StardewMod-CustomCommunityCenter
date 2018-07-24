@@ -107,6 +107,8 @@ namespace CustomCommunityCenter
             });
 
             Monitor.Log("Initialized");
+
+            
         }
 
         public override object GetApi()

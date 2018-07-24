@@ -81,26 +81,16 @@ namespace CustomCommunityCenter
 
         private Cue buildUpSound;
 
-
-        private NetBundles _bundles;
-
         [XmlElement("bundles")]
         public NetBundles bundles
         {
-            get
-            {
-                //return Game1.netWorldState.Value.Bundles;
-                return _bundles;
-            }
+            get { return CommunityCenterHelper.WorldState.Bundles; }
         }
 
         [XmlElement("bundleRewards")]
         public NetIntDictionary<bool, NetBool> bundleRewards
         {
-            get
-            {
-                return Game1.netWorldState.Value.BundleRewards;
-            }
+            get { return CommunityCenterHelper.WorldState.BundleRewards; }
         }
 
         public CustomCommunityCenter() : base(CommunityCenterMapName, CommunityCenterName)
@@ -114,7 +104,7 @@ namespace CustomCommunityCenter
         protected override void initNetFields()
         {
             // Read data from mod config
-            setupNetFieldsFromModConfig();
+            SetupNetFieldsFromModConfig();
 
             // Continue net field initialization
             base.initNetFields();
@@ -124,39 +114,48 @@ namespace CustomCommunityCenter
             areaCompleteRewardEvent.onEvent += doAreaCompleteReward;
         }
 
-        protected virtual void setupNetFieldsFromModConfig()
+        public virtual void SetupNetFieldsFromModConfig()
         {
+            int bundleCount = 0;
             var bundleAreas = CommunityCenterHelper.BundleAreas;
 
-            // Bundle Areas
-            for(int i = 0; i < bundleAreas.Count; i++)
-            {
-                areasComplete[i] = bundleAreas[i].Completed;
-            }
+            // Clear Net Fields for multiplayer sync
+            bundles.Clear();
+            bundleRewards.Clear();           
 
-            // Bundles
-            _bundles = new NetBundles();
-            for(int i = 0; i < bundleAreas.Count; i++)
+            for (int i = 0; i < bundleAreas.Count; i++)
             {
+                // Areas in community center that are restored
+                areasComplete[i] = bundleAreas[i].Completed;
+
                 bool[] bundleFlag = new bool[bundleAreas[i].Bundles.Count];
+                NetArray<bool, NetBool> ingredients = new NetArray<bool, NetBool>();
                 for(int j = 0; j < bundleAreas[i].Bundles.Count; j++)
                 {
                     bundleFlag[j] = bundleAreas[i].Bundles[j].Completed;
-                }
 
-                _bundles.Add(i, bundleFlag);
-
-                for(int j = 0; j < bundleAreas[i].Bundles.Count; j++)
-                {
-                    NetArray<bool, NetBool> ingredientFlag = new NetArray<bool, NetBool>();
+                    bundleRewards.Add(bundleCount, bundleFlag[j]);
+                    bundleCount++;
                     for(int k = 0; k < bundleAreas[i].Bundles[j].Ingredients.Count; k++)
                     {
-                        ingredientFlag.Add(bundleAreas[i].Bundles[j].Ingredients[k].Completed);
+                        ingredients.Add(bundleAreas[i].Bundles[j].Ingredients[k].Completed);
                     }
                 }
-            }
 
-            // Ingredients
+                bundles.Add(i, ingredients);
+
+                // Ingredients
+                //for (int j = 0; j < bundleAreas[i].Bundles.Count; j++)
+                //{
+                //    NetArray<bool, NetBool> ingredientFlag = new NetArray<bool, NetBool>();
+                //    for(int k = 0; k < bundleAreas[i].Bundles[j].Ingredients.Count; k++)
+                //    {
+                //        ingredientFlag.Add(bundleAreas[i].Bundles[j].Ingredients[k].Completed);
+                //    }
+
+                //    bundles.Add()
+                //}
+            }
         }
 
         private void initAreaBundleConversions()
@@ -739,7 +738,11 @@ namespace CustomCommunityCenter
                             if (!base.isCollidingPosition(i.GetBoundingBox(), Game1.viewport, i))
                             {
                                 base.characters.Add(i);
-#warning Multiplayer - broadcast sprites to other players
+
+                                CommunityCenterHelper.MultiplayerHelper.broadcastSprites(this, new TemporaryAnimatedSprite((Game1.random.NextDouble() < 0.5) ? 5 : 46, v * 64f + new Vector2(16f, 16f), Color.White, 8, false, 100f, 0, -1, -1f, -1, 0)
+                                {
+                                    layerDepth = 1f
+                                });
                                 //Game1.multiplayer.broadcastSprites(this, new TemporaryAnimatedSprite((Game1.random.NextDouble() < 0.5) ? 5 : 46, v * 64f + new Vector2(16f, 16f), Color.White, 8, false, 100f, 0, -1, -1f, -1, 0)
                                 //{
                                 //    layerDepth = 1f
