@@ -60,17 +60,23 @@ namespace CustomCommunityCenter.API
 
         public static void IngredientComplete()
         {
-            CustomCommunityCenter.SetupNetFieldsFromModConfig();
+            UpdateNetFields();
         }
 
         public static void BundleComplete()
         {
-            CustomCommunityCenter.SetupNetFieldsFromModConfig();
+            UpdateNetFields();
         }
 
         public static void BundleAreaComplete()
         {
-            CustomCommunityCenter.SetupNetFieldsFromModConfig();
+            UpdateNetFields();
+        }
+
+        public static void UpdateNetFields()
+        {
+            if (Game1.IsServer) CustomCommunityCenter.SetupNetFieldsFromModConfig();
+            else CustomCommunityCenter.SetupModConfigFromNetFields();
         }
 
         public void SetBundleAreas(IList<BundleAreaInfo> bundleAreas)
@@ -229,7 +235,7 @@ namespace CustomCommunityCenter.API
             }
 
             // Now that config is loaded, update the net fields
-            CustomCommunityCenter.SetupNetFieldsFromModConfig();
+            UpdateNetFields();
         }
 
         protected virtual void PresaveData(object sender, EventArgs e)
