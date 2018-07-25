@@ -165,7 +165,7 @@ namespace CustomCommunityCenter
 
                     for(int k = 0; k < bundleAreas[i].Bundles[j].Ingredients.Count; k++)
                     {
-                        bundleAreas[i].Bundles[j].Ingredients[k].Completed = bundles[i][ingredientCountwwwww];
+                        bundleAreas[i].Bundles[j].Ingredients[k].Completed = bundles[i][ingredientCount];
                         ingredientCount++;
                     }
 
