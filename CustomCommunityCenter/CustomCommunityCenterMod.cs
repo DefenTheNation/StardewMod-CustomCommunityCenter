@@ -36,6 +36,7 @@ namespace CustomCommunityCenter
             }
 
             ModAPI = new CommunityCenterHelper(helper, config);
+            CommunityCenterHelper.Helper = ModAPI;
 
             helper.ConsoleCommands.Add("show", "Shows Bundle Menu", (string command, string[] arguments) =>
             {

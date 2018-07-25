@@ -152,21 +152,24 @@ namespace CustomCommunityCenter
 
         public virtual void SetupModConfigFromNetFields()
         {
-            int bundleCount = 0;
+            int totalBundleCount = 0;
+            int ingredientCount = 0;
             var bundleAreas = CommunityCenterHelper.BundleAreas;
 
             for (int i = 0; i < bundleAreas.Count; i++)
             {
+                ingredientCount = 0;
                 for(int j = 0; j < bundleAreas[i].Bundles.Count; j++)
                 {
-                    bundleAreas[i].Bundles[j].Collected = bundleRewards[bundleCount];
+                    bundleAreas[i].Bundles[j].Collected = bundleRewards[totalBundleCount];
 
                     for(int k = 0; k < bundleAreas[i].Bundles[j].Ingredients.Count; k++)
                     {
-                        bundleAreas[i].Bundles[j].Ingredients[k].Completed = bundles[i][k];
+                        bundleAreas[i].Bundles[j].Ingredients[k].Completed = bundles[i][ingredientCountwwwww];
+                        ingredientCount++;
                     }
 
-                    bundleCount++;
+                    totalBundleCount++;
                 }
             }
         }

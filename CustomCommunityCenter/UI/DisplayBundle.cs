@@ -100,7 +100,7 @@ namespace CustomCommunityCenter
                         slot.sourceRect.X = 512;
                         slot.sourceRect.Y = 244;
 
-                        CommunityCenterHelper.IngredientComplete();
+                        CommunityCenterHelper.IngredientComplete(BundleInfo, bundleItem);
 
                         break;
                     }

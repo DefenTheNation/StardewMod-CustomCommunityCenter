@@ -35,13 +35,11 @@
         {
             if (WillCompleteIngredient(o))
             {
-                Completed = true;
                 o.Stack -= RequiredStack;
 
                 return true;
             }
             else return false;
-
         }
     }
 }

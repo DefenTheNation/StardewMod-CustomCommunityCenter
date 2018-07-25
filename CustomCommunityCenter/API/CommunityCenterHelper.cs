@@ -15,6 +15,7 @@ namespace CustomCommunityCenter.API
 {
     public class CommunityCenterHelper : ICommunityCenterHelper
     {
+        public static CommunityCenterHelper Helper { get; set; }
         public static IWorldState WorldState { get; set; }
         public static Multiplayer MultiplayerHelper { get; set; }
         public static IList<BundleAreaInfo> BundleAreas { get; set; }
@@ -58,8 +59,34 @@ namespace CustomCommunityCenter.API
             return -1;
         }
 
-        public static void IngredientComplete()
+        public static void IngredientComplete(BundleInfo bundle, BundleIngredientInfo ingredient)
         {
+            int ingredientCount = 0;
+            var bundleAreas = Helper.Config.BundleRooms;
+            BundleInfo matchedBundle = new BundleInfo();
+            for(int i = 0; i < bundleAreas.Count; i++)
+            {
+                ingredientCount = 0;
+                for(int j = 0; j < bundleAreas[i].Bundles.Count; j++)
+                {
+                    if (bundleAreas[i].Bundles[j].Name == bundle.Name)
+                    {
+                        matchedBundle = bundleAreas[i].Bundles[j];
+                        break;
+                    }
+                    else ingredientCount += bundleAreas[i].Bundles[j].Ingredients.Count;
+                }
+
+                for(int j = 0; j < matchedBundle.Ingredients.Count; j++)
+                {
+                    if(matchedBundle.Ingredients[j].ItemId == ingredient.ItemId && matchedBundle.Ingredients[j].RequiredStack == ingredient.RequiredStack)
+                    {
+                        matchedBundle.Ingredients[j].Completed = true;
+                        WorldState.Bundles[i][ingredientCount] = true;
+                    }
+                }
+            }
+
             UpdateNetFields();
         }
 
