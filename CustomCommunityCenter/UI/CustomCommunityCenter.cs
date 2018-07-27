@@ -85,13 +85,13 @@ namespace CustomCommunityCenter
         [XmlElement("bundles")]
         public NetBundles bundles
         {
-            get { return CommunityCenterHelper.WorldState.Bundles; }
+            get { return CommunityCenterHelper.WorldState.Value.Bundles; }
         }
 
         [XmlElement("bundleRewards")]
         public NetIntDictionary<bool, NetBool> bundleRewards
         {
-            get { return CommunityCenterHelper.WorldState.BundleRewards; }
+            get { return CommunityCenterHelper.WorldState.Value.BundleRewards; }
         }
 
         public CustomCommunityCenter() : base(CommunityCenterMapName, CommunityCenterName)

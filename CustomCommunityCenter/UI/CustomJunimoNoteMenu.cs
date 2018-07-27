@@ -367,7 +367,7 @@ namespace CustomCommunityCenter
 
             for (int j = 0; j < CommunityCenterHelper.CustomCommunityCenter.bundles[AreaIndex].Length; j++)
             {
-                CommunityCenterHelper.WorldState.Bundles.FieldDict[AreaIndex][j] = true;
+                CommunityCenterHelper.WorldState.Value.Bundles.FieldDict[AreaIndex][j] = true;
             }
 
             CommunityCenterHelper.BundleComplete();

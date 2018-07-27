@@ -112,7 +112,7 @@ namespace CustomCommunityCenter
             {
                 int count = 0;
                 string output = "";
-                foreach(var item in CommunityCenterHelper.WorldState.Bundles.Values)
+                foreach(var item in CommunityCenterHelper.WorldState.Value.Bundles.Values)
                 {
                     output = "Bundle id " + count + ":\n";
                     for(int i = 0; i < item.Length; i++)
@@ -126,7 +126,7 @@ namespace CustomCommunityCenter
                 }
 
                 count = 0;
-                foreach(var item in CommunityCenterHelper.WorldState.BundleRewards.Values)
+                foreach(var item in CommunityCenterHelper.WorldState.Value.BundleRewards.Values)
                 {
                     output = "Reward " + count + ": " + item;
                     count++;

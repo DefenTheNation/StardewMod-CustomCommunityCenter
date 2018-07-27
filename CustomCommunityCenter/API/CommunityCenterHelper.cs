@@ -16,7 +16,7 @@ namespace CustomCommunityCenter.API
     public class CommunityCenterHelper : ICommunityCenterHelper
     {
         public static CommunityCenterHelper Helper { get; set; }
-        public static IWorldState WorldState { get; set; }
+        public static NetRoot<IWorldState> WorldState { get; set; }
         public static Multiplayer MultiplayerHelper { get; set; }
         public static IList<BundleAreaInfo> BundleAreas { get; set; }
 
@@ -34,7 +34,7 @@ namespace CustomCommunityCenter.API
             BundleAreas = Config.BundleRooms;
 
             MultiplayerHelper = helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
-            WorldState = helper.Reflection.GetField<NetRoot<IWorldState>>(typeof(Game1), "netWorldState").GetValue().Value;
+            WorldState = helper.Reflection.GetField<NetRoot<IWorldState>>(typeof(Game1), "netWorldState").GetValue();            
 
             CustomCommunityCenter = new CustomCommunityCenter();
 
@@ -82,7 +82,7 @@ namespace CustomCommunityCenter.API
                     if(matchedBundle.Ingredients[j].ItemId == ingredient.ItemId && matchedBundle.Ingredients[j].RequiredStack == ingredient.RequiredStack)
                     {
                         matchedBundle.Ingredients[j].Completed = true;
-                        WorldState.Bundles[i][ingredientCount] = true;
+                        WorldState.Value.Bundles[i][ingredientCount] = true;
                     }
                 }
             }
