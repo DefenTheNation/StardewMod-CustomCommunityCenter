@@ -34,7 +34,7 @@ namespace CustomCommunityCenter.API
             BundleAreas = Config.BundleRooms;
 
             MultiplayerHelper = helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
-            WorldState = helper.Reflection.GetField<NetRoot<IWorldState>>(typeof(Game1), "netWorldState").GetValue();            
+            WorldState = Game1.netWorldState; //helper.Reflection.GetField<NetRoot<IWorldState>>(typeof(Game1), "netWorldState").GetValue();            
 
             CustomCommunityCenter = new CustomCommunityCenter();
 
@@ -63,10 +63,12 @@ namespace CustomCommunityCenter.API
         {
             int ingredientCount = 0;
             var bundleAreas = Helper.Config.BundleRooms;
-            BundleInfo matchedBundle = new BundleInfo();
+            BundleInfo matchedBundle;
+
             for(int i = 0; i < bundleAreas.Count; i++)
             {
                 ingredientCount = 0;
+                matchedBundle = null;
                 for(int j = 0; j < bundleAreas[i].Bundles.Count; j++)
                 {
                     if (bundleAreas[i].Bundles[j].Name == bundle.Name)
@@ -74,15 +76,19 @@ namespace CustomCommunityCenter.API
                         matchedBundle = bundleAreas[i].Bundles[j];
                         break;
                     }
-                    else ingredientCount += bundleAreas[i].Bundles[j].Ingredients.Count;
+                    else    ingredientCount += bundleAreas[i].Bundles[j].Ingredients.Count;
                 }
 
+                if (matchedBundle == null) continue;
                 for(int j = 0; j < matchedBundle.Ingredients.Count; j++)
                 {
                     if(matchedBundle.Ingredients[j].ItemId == ingredient.ItemId && matchedBundle.Ingredients[j].RequiredStack == ingredient.RequiredStack)
                     {
                         matchedBundle.Ingredients[j].Completed = true;
                         WorldState.Value.Bundles[i][ingredientCount] = true;
+                        WorldState.MarkDirty();
+
+                        break;
                     }
                 }
             }
@@ -102,7 +108,7 @@ namespace CustomCommunityCenter.API
 
         public static void UpdateNetFields()
         {
-            if (Game1.IsServer) CustomCommunityCenter.SetupNetFieldsFromModConfig();
+            if (Game1.IsMasterGame) CustomCommunityCenter.SetupNetFieldsFromModConfig();
             else CustomCommunityCenter.SetupModConfigFromNetFields();
         }
 
