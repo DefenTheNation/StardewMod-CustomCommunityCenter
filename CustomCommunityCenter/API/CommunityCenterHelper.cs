@@ -87,6 +87,7 @@ namespace CustomCommunityCenter.API
                         matchedBundle.Ingredients[j].Completed = true;
                         WorldState.Value.Bundles[i][ingredientCount] = true;
                         WorldState.MarkDirty();
+                        MultiplayerHelper.broadcastWorldStateDeltas();
 
                         break;
                     }
