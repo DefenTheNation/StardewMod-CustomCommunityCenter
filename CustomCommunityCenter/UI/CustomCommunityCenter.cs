@@ -473,6 +473,8 @@ namespace CustomCommunityCenter
 
         protected override void resetSharedState()
         {
+            SetupNetFieldsFromModConfig();
+
             base.resetSharedState();
             if (!Game1.MasterPlayer.mailReceived.Contains("JojaMember") && !areAllAreasComplete())
             {
@@ -496,6 +498,8 @@ namespace CustomCommunityCenter
 
         protected override void resetLocalState()
         {
+            SetupModConfigFromNetFields();
+
             base.resetLocalState();
             if (!Game1.MasterPlayer.mailReceived.Contains("JojaMember") && !areAllAreasComplete())
             {
@@ -637,6 +641,8 @@ namespace CustomCommunityCenter
 
         public void loadArea(int area, bool showEffects = true)
         {
+            SetupModConfigFromNetFields();
+
             Microsoft.Xna.Framework.Rectangle areaToRefurbish = getAreaBounds(area);
             Map refurbishedMap = Game1.game1.xTileContent.Load<Map>("Maps\\CommunityCenter_Refurbished");
             for (int x = areaToRefurbish.X; x < areaToRefurbish.Right; x++)

@@ -61,9 +61,10 @@ namespace CustomCommunityCenter
             FromThisMenu = _fromThisMenu;
 
             bundleGroupList = info.ToList();
+            AreaIndex = index;
 
             CustomCommunityCenter cc = CommunityCenterHelper.CustomCommunityCenter;
-            SetupMenu(index, cc.bundlesDict());           
+            SetupMenu(cc.bundlesDict());           
 
             Game1.player.forceCanMove();
             AreaNextButton = new ClickableTextureComponent(new Rectangle(base.xPositionOnScreen + base.width - 128, base.yPositionOnScreen, 48, 44), Game1.mouseCursors, new Rectangle(365, 495, 12, 11), 4f, false)
@@ -80,7 +81,7 @@ namespace CustomCommunityCenter
             };
             for (int j = 0; j < info.Count; j++)
             {
-                if (cc.shouldNoteAppearInArea((AreaIndex + j) % info.Count))
+                if (cc.shouldNoteAppearInArea(j))
                 {
                     AreaNextButton.visible = true;
                 }
@@ -120,9 +121,9 @@ namespace CustomCommunityCenter
             return bundleGroupList[AreaIndex].RewardName;
         }
 
-        private void SetupMenu(int area, Dictionary<int, bool[]> bundlesComplete)
+        private void SetupMenu(Dictionary<int, bool[]> bundlesComplete)
         {
-            AreaIndex = area;
+            
             noteTexture = Game1.temporaryContent.Load<Texture2D>(BundleTextureName);
             inventory = new InventoryMenu(xPositionOnScreen + 128, yPositionOnScreen + 140, true, null, Utility.highlightSmallObjects, 36, 6, 8, 8, false)
             {
