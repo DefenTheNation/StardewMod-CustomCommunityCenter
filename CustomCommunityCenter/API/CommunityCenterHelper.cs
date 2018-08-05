@@ -39,6 +39,8 @@ namespace CustomCommunityCenter.API
             SaveEvents.AfterSave += InjectCommunityCenter;
             SaveEvents.AfterLoad += InjectCommunityCenter;
             SaveEvents.AfterCreate += InjectCommunityCenter;
+
+            
         }
 
         public static int GetBundleRewardIndex(int areaIndex, int bundleIndex)
@@ -84,7 +86,7 @@ namespace CustomCommunityCenter.API
                         matchedBundle.Ingredients[j].Completed = true;
                         WorldState.Value.Bundles.FieldDict[i][ingredientCount] = true;
 
-                        UpdateNetFields();
+                        WriteToNetFieldsFromConfig();
                         return;
                     }
                 }
@@ -93,27 +95,24 @@ namespace CustomCommunityCenter.API
 
         public static void BundleComplete()
         {
-            UpdateNetFields();
+            WriteToNetFieldsFromConfig();
         }
 
         public static void BundleAreaComplete()
         {
-            UpdateNetFields();
+            WriteToNetFieldsFromConfig();
         }
 
-        public static void UpdateNetFields()
+        public static void WriteToNetFieldsFromConfig()
         {
+            CustomCommunityCenter.SetupNetFieldsFromModConfig();
             WorldState.MarkDirty();
-            MultiplayerHelper.UpdateLate(true);
+            MultiplayerHelper.UpdateLate(true);            
+        }
 
-            if (Game1.IsMasterGame && !Game1.IsClient)
-            {
-                CustomCommunityCenter.SetupNetFieldsFromModConfig();
-            }
-            else
-            {
-                CustomCommunityCenter.SetupModConfigFromNetFields();
-            }
+        public static void ReadFromNetFieldsToConfig()
+        {
+            CustomCommunityCenter.SetupModConfigFromNetFields();
         }
 
         public void SetBundleAreas(IList<BundleAreaInfo> bundleAreas)
@@ -158,11 +157,13 @@ namespace CustomCommunityCenter.API
 
         protected virtual void SaveFarmProgress()
         {
+            if (Game1.IsClient) return;
+
             string saveDataPath = GetSaveDataPath();
             var saveData = new FarmSaveData()
             {
                 BundleRooms = new List<BundleAreaSaveData>()
-            };
+            };           
 
             foreach (var bundleArea in Config.BundleRooms)
             {
@@ -270,12 +271,11 @@ namespace CustomCommunityCenter.API
                     }
                 }
             }
-
-            
         }
 
         protected virtual void PresaveData(object sender, EventArgs e)
         {
+            CustomCommunityCenter.SetupModConfigFromNetFields();
             SaveFarmProgress();
             RemoveAndReplaceLocation(CustomCommunityCenter, CommunityCenter);     
         }
@@ -287,13 +287,18 @@ namespace CustomCommunityCenter.API
 
             LoadFarmProgress();
             // Now that config is loaded, update the net fields
-            UpdateNetFields();
+            CustomCommunityCenter.SetupNetFieldsFromModConfig();
             RemoveAndReplaceLocation(CommunityCenter, CustomCommunityCenter);
+        }
+
+        protected virtual string GetConfigDataPath()
+        {
+            return Path.Combine("saveData", Constants.SaveFolderName + "_config.json");
         }
 
         protected virtual string GetSaveDataPath()
         {
-            return Path.Combine("saveData", Constants.SaveFolderName + ".json");
+            return Path.Combine("saveData", Constants.SaveFolderName + "_save.json");
         }
 
         protected virtual void RemoveAndReplaceLocation(GameLocation toRemove, GameLocation toReplace)

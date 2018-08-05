@@ -61,9 +61,9 @@ namespace CustomCommunityCenter
             FromThisMenu = _fromThisMenu;
 
             bundleGroupList = info.ToList();
-            SetupMenu(index);
 
             CustomCommunityCenter cc = CommunityCenterHelper.CustomCommunityCenter;
+            SetupMenu(index, cc.bundlesDict());           
 
             Game1.player.forceCanMove();
             AreaNextButton = new ClickableTextureComponent(new Rectangle(base.xPositionOnScreen + base.width - 128, base.yPositionOnScreen, 48, 44), Game1.mouseCursors, new Rectangle(365, 495, 12, 11), 4f, false)
@@ -120,7 +120,7 @@ namespace CustomCommunityCenter
             return bundleGroupList[AreaIndex].RewardName;
         }
 
-        private void SetupMenu(int area)
+        private void SetupMenu(int area, Dictionary<int, bool[]> bundlesComplete)
         {
             AreaIndex = area;
             noteTexture = Game1.temporaryContent.Load<Texture2D>(BundleTextureName);
@@ -133,9 +133,17 @@ namespace CustomCommunityCenter
             bundles.Clear();
 
             int bundlesAdded = 0;
+            int ingredientsIndex = 0;
             var bundleInfo = bundleGroupList[AreaIndex];
+            var completed = bundlesComplete[AreaIndex];
             foreach (var bundle in bundleInfo.Bundles)
             {
+                foreach(var ingredient in bundle.Ingredients)
+                {
+                    ingredient.Completed = completed[ingredientsIndex];
+                    ingredientsIndex++;
+                }
+
                 bundles.Add(new DisplayBundle(bundlesAdded, BundleTextureName, bundle, GetBundleLocationFromNumber(bundlesAdded))
                 {
                     myID = bundlesAdded + 505,
