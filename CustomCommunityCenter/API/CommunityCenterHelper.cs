@@ -34,7 +34,7 @@ namespace CustomCommunityCenter.API
             BundleAreas = Config.BundleRooms;
 
             MultiplayerHelper = helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
-            WorldState = Game1.netWorldState; //helper.Reflection.GetField<NetRoot<IWorldState>>(typeof(Game1), "netWorldState").GetValue();            
+            WorldState = Game1.netWorldState;         
 
             CustomCommunityCenter = new CustomCommunityCenter();
 
@@ -87,6 +87,7 @@ namespace CustomCommunityCenter.API
                         matchedBundle.Ingredients[j].Completed = true;
                         WorldState.Value.Bundles[i][ingredientCount] = true;
                         WorldState.MarkDirty();
+                        WorldState.Value.Bundles.MarkDirty();
                         MultiplayerHelper.broadcastWorldStateDeltas();
 
                         break;
@@ -268,8 +269,7 @@ namespace CustomCommunityCenter.API
                 }
             }
 
-            // Now that config is loaded, update the net fields
-            UpdateNetFields();
+            
         }
 
         protected virtual void PresaveData(object sender, EventArgs e)
@@ -281,6 +281,8 @@ namespace CustomCommunityCenter.API
         protected virtual void InjectCommunityCenter(object sender, EventArgs e)
         {
             LoadFarmProgress();
+            // Now that config is loaded, update the net fields
+            UpdateNetFields();
             RemoveAndReplaceLocation(CommunityCenter, CustomCommunityCenter);
         }
 
