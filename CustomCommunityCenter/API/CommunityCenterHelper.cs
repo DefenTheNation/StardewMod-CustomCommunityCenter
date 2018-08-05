@@ -33,9 +33,6 @@ namespace CustomCommunityCenter.API
 
             BundleAreas = Config.BundleRooms;
 
-            MultiplayerHelper = helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
-            WorldState = Game1.netWorldState;         
-
             CustomCommunityCenter = new CustomCommunityCenter();
 
             SaveEvents.BeforeSave += PresaveData;
@@ -85,17 +82,13 @@ namespace CustomCommunityCenter.API
                     if(matchedBundle.Ingredients[j].ItemId == ingredient.ItemId && matchedBundle.Ingredients[j].RequiredStack == ingredient.RequiredStack)
                     {
                         matchedBundle.Ingredients[j].Completed = true;
-                        WorldState.Value.Bundles[i][ingredientCount] = true;
-                        WorldState.MarkDirty();
-                        WorldState.Value.Bundles.MarkDirty();
-                        MultiplayerHelper.broadcastWorldStateDeltas();
+                        WorldState.Value.Bundles.FieldDict[i][ingredientCount] = true;
 
-                        break;
+                        UpdateNetFields();
+                        return;
                     }
                 }
             }
-
-            UpdateNetFields();
         }
 
         public static void BundleComplete()
@@ -110,8 +103,17 @@ namespace CustomCommunityCenter.API
 
         public static void UpdateNetFields()
         {
-            if (Game1.IsMasterGame) CustomCommunityCenter.SetupNetFieldsFromModConfig();
-            else CustomCommunityCenter.SetupModConfigFromNetFields();
+            WorldState.MarkDirty();
+            MultiplayerHelper.UpdateLate(true);
+
+            //if (Game1.IsMasterGame && !Game1.IsClient)
+            //{
+            //    CustomCommunityCenter.SetupNetFieldsFromModConfig();
+            //}
+            //else
+            //{
+            //    CustomCommunityCenter.SetupModConfigFromNetFields();
+            //}
         }
 
         public void SetBundleAreas(IList<BundleAreaInfo> bundleAreas)
@@ -280,6 +282,9 @@ namespace CustomCommunityCenter.API
 
         protected virtual void InjectCommunityCenter(object sender, EventArgs e)
         {
+            MultiplayerHelper = ModHelper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
+            WorldState = Game1.netWorldState;
+
             LoadFarmProgress();
             // Now that config is loaded, update the net fields
             UpdateNetFields();
