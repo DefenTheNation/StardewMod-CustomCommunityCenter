@@ -105,8 +105,8 @@ namespace CustomCommunityCenter
         protected override void initNetFields()
         {
             // Read data from mod config
-            SetupNetFieldsFromModConfig();
-            SetupModConfigFromNetFields();
+            //SetupNetFieldsFromModConfig();
+            //SetupModConfigFromNetFields();
 
             // Continue net field initialization
             base.initNetFields();

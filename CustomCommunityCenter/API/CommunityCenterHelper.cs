@@ -106,14 +106,14 @@ namespace CustomCommunityCenter.API
             WorldState.MarkDirty();
             MultiplayerHelper.UpdateLate(true);
 
-            //if (Game1.IsMasterGame && !Game1.IsClient)
-            //{
-            //    CustomCommunityCenter.SetupNetFieldsFromModConfig();
-            //}
-            //else
-            //{
-            //    CustomCommunityCenter.SetupModConfigFromNetFields();
-            //}
+            if (Game1.IsMasterGame && !Game1.IsClient)
+            {
+                CustomCommunityCenter.SetupNetFieldsFromModConfig();
+            }
+            else
+            {
+                CustomCommunityCenter.SetupModConfigFromNetFields();
+            }
         }
 
         public void SetBundleAreas(IList<BundleAreaInfo> bundleAreas)
