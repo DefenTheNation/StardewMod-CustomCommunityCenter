@@ -91,17 +91,17 @@ namespace CustomCommunityCenter.API
 
         public static void BundleComplete()
         {
-            WriteToNetFieldsFromConfig();
+            //WriteToNetFieldsFromConfig();
         }
 
         public static void BundleAreaComplete()
         {
-            WriteToNetFieldsFromConfig();
+            //WriteToNetFieldsFromConfig();
         }
 
         public static void WriteToNetFieldsFromConfig()
         {
-            CustomCC.SetupNetFieldsFromModConfig();
+            //CustomCC.SetupNetFieldsFromModConfig();
             WorldState.MarkDirty();
             MultiplayerHelper.UpdateLate(true);            
         }
