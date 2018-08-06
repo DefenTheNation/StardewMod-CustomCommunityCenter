@@ -39,8 +39,6 @@ namespace CustomCommunityCenter.API
             SaveEvents.AfterSave += InjectCommunityCenter;
             SaveEvents.AfterLoad += InjectCommunityCenter;
             SaveEvents.AfterCreate += InjectCommunityCenter;
-
-            
         }
 
         public static int GetBundleRewardIndex(int areaIndex, int bundleIndex)
@@ -75,13 +73,13 @@ namespace CustomCommunityCenter.API
                         matchedBundle = bundleAreas[i].Bundles[j];
                         break;
                     }
-                    else    ingredientCount += bundleAreas[i].Bundles[j].Ingredients.Count;
+                    else ingredientCount += bundleAreas[i].Bundles[j].Ingredients.Count;
                 }
 
                 if (matchedBundle == null) continue;
                 for(int j = 0; j < matchedBundle.Ingredients.Count; j++)
                 {
-                    if(matchedBundle.Ingredients[j].ItemId == ingredient.ItemId && matchedBundle.Ingredients[j].RequiredStack == ingredient.RequiredStack)
+                    if(!matchedBundle.Ingredients[j].Completed && matchedBundle.Ingredients[j].ItemId == ingredient.ItemId && matchedBundle.Ingredients[j].RequiredStack == ingredient.RequiredStack)
                     {
                         matchedBundle.Ingredients[j].Completed = true;
                         WorldState.Value.Bundles.FieldDict[i][ingredientCount] = true;
@@ -277,7 +275,7 @@ namespace CustomCommunityCenter.API
         {
             CustomCommunityCenter.SetupModConfigFromNetFields();
             SaveFarmProgress();
-            RemoveAndReplaceLocation(CustomCommunityCenter, CommunityCenter);     
+            RemoveAndReplaceCC(CommunityCenter);     
         }
 
         protected virtual void InjectCommunityCenter(object sender, EventArgs e)
@@ -288,7 +286,7 @@ namespace CustomCommunityCenter.API
             LoadFarmProgress();
             // Now that config is loaded, update the net fields
             CustomCommunityCenter.SetupNetFieldsFromModConfig();
-            RemoveAndReplaceLocation(CommunityCenter, CustomCommunityCenter);
+            RemoveAndReplaceCC(CustomCommunityCenter);
         }
 
         protected virtual string GetConfigDataPath()
@@ -301,9 +299,17 @@ namespace CustomCommunityCenter.API
             return Path.Combine("saveData", Constants.SaveFolderName + "_save.json");
         }
 
-        protected virtual void RemoveAndReplaceLocation(GameLocation toRemove, GameLocation toReplace)
+        protected virtual void RemoveAndReplaceCC(GameLocation toReplace)
         {
-            Game1.locations.Remove(toRemove);
+            for(int i = 0; i < Game1.locations.Count; i++)
+            {
+                if(Game1.locations[i].Name == CustomCommunityCenter.Name)
+                {
+                    Game1.locations.RemoveAt(i);
+                    break;
+                }
+            }
+
             Game1.locations.Add(toReplace);
         }
     }

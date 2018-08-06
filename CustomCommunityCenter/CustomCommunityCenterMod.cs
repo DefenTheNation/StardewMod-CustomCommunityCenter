@@ -148,10 +148,10 @@ namespace CustomCommunityCenter
 
             var pantry = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), Name = "Pantry", RewardName = "Greenhouse" };
             var craftsRoom = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), Name = "Crafts Room", RewardName = "Bridge Repair" };           
-            var fishTank = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), RewardName = "Glittering Boulder Removed" };
-            var boilerRoom = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), RewardName = "Minecarts Repaired" };
-            var bulletinBoard = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), RewardName = "Friendship ♡" };
-            var vault = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), RewardName = "Bus Repair" };
+            var fishTank = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), Name = "Fish Tank", RewardName = "Glittering Boulder Removed" };
+            var boilerRoom = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), Name = "Boiler Room", RewardName = "Minecarts Repaired" };
+            var bulletinBoard = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), Name = "Bulletin Board", RewardName = "Friendship ♡" };
+            var vault = new BundleAreaInfo() { Bundles = new List<BundleInfo>(), Name = "Vault", RewardName = "Bus Repair" };
 
             bundleAreas.Add(pantry);
             bundleAreas.Add(craftsRoom);            
