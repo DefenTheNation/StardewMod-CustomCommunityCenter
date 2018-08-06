@@ -15,9 +15,9 @@ using xTile;
 using xTile.Dimensions;
 using xTile.Tiles;
 
-namespace CustomCommunityCenter
+namespace CustomCommunityCenter.UI
 {
-    public class CustomCommunityCenter : GameLocation
+    public class CustomCommunityCenterLocation : GameLocation
     {
         public static string CommunityCenterName = "CommunityCenter";
         public static string CommunityCenterMapName = "Maps\\CommunityCenter_Ruins";        
@@ -94,7 +94,7 @@ namespace CustomCommunityCenter
             get { return CommunityCenterHelper.WorldState.Value.BundleRewards; }
         }
 
-        public CustomCommunityCenter() : base(CommunityCenterMapName, CommunityCenterName)
+        public CustomCommunityCenterLocation() : base(CommunityCenterMapName, CommunityCenterName)
         {
             areasComplete = new NetArray<bool, NetBool>(CommunityCenterHelper.BundleAreas.Count);
 
@@ -706,7 +706,7 @@ namespace CustomCommunityCenter
             restoreAreaIndex = whichArea;
             restoreAreaPhase = 0;
             restoreAreaTimer = 1000;
-            if (Game1.player.currentLocation == this)
+            if (Game1.player.currentLocation.Name == Name)
             {
                 Game1.freezeControls = true;
                 Game1.changeMusicTrack("none");
@@ -743,7 +743,7 @@ namespace CustomCommunityCenter
                         {
                             restoreAreaTimer = 3000;
                             restoreAreaPhase = 1;
-                            if (Game1.player.currentLocation == this)
+                            if (Game1.player.currentLocation.Name == Name)
                             {
                                 Game1.player.faceDirection(2);
                                 Game1.player.jump();
@@ -776,7 +776,7 @@ namespace CustomCommunityCenter
                         {
                             restoreAreaTimer = 999999;
                             restoreAreaPhase = 2;
-                            if (Game1.player.currentLocation != this)
+                            if (Game1.player.currentLocation.Name != Name)
                             {
                                 break;
                             }
@@ -827,7 +827,7 @@ namespace CustomCommunityCenter
                                     }
                                 }
                             }
-                            if (Game1.player.currentLocation == this)
+                            if (Game1.player.currentLocation.Name == Name)
                             {
                                 Game1.screenGlowHold = false;
                                 loadArea(restoreAreaIndex, true);

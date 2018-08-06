@@ -72,6 +72,7 @@
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="UI\CustomCommunityCenter.cs" />
     <Compile Include="CustomCommunityCenterMod.cs" />
+    <Compile Include="UI\CustomCommunityCenter2.cs" />
     <Compile Include="UI\CustomJunimoNoteMenu.cs" />
     <Compile Include="UI\DisplayBundle.cs" />
     <Compile Include="Data\ItemCodes.cs" />

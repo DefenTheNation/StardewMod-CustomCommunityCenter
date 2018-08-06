@@ -1,5 +1,6 @@
 ﻿using CustomCommunityCenter.API;
 using CustomCommunityCenter.Data;
+using CustomCommunityCenter.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -63,7 +64,7 @@ namespace CustomCommunityCenter
             bundleGroupList = info.ToList();
             AreaIndex = index;
 
-            CustomCommunityCenter cc = CommunityCenterHelper.CustomCommunityCenter;
+            var cc = CommunityCenterHelper.CustomCC;
             SetupMenu(cc.bundlesDict());           
 
             Game1.player.forceCanMove();
@@ -350,8 +351,8 @@ namespace CustomCommunityCenter
 
         private void CompleteCommunityCenter(int areaIndex)
         {
-            CommunityCenterHelper.CustomCommunityCenter.areasComplete[areaIndex] = true;
-            CommunityCenterHelper.CustomCommunityCenter.areaCompleteReward(areaIndex);
+            CommunityCenterHelper.CustomCC.areasComplete[areaIndex] = true;
+            CommunityCenterHelper.CustomCC.areaCompleteReward(areaIndex);
 
             exitFunction = RestoreAreaOnExit;
         }
@@ -360,7 +361,7 @@ namespace CustomCommunityCenter
         {
             if (!FromGameMenu)
             {
-                (CommunityCenterHelper.CustomCommunityCenter).restoreAreaCutscene(AreaIndex);
+                (CommunityCenterHelper.CustomCC).restoreAreaCutscene(AreaIndex);
             }
         }
 
@@ -374,20 +375,20 @@ namespace CustomCommunityCenter
                 heldItem = null;
             }
 
-            for (int j = 0; j < CommunityCenterHelper.CustomCommunityCenter.bundles[AreaIndex].Length; j++)
+            for (int j = 0; j < CommunityCenterHelper.CustomCC.bundles[AreaIndex].Length; j++)
             {
                 CommunityCenterHelper.WorldState.Value.Bundles.FieldDict[AreaIndex][j] = true;
             }
 
             CommunityCenterHelper.BundleComplete();
 
-            CommunityCenterHelper.CustomCommunityCenter.checkForNewJunimoNotes();
+            CommunityCenterHelper.CustomCC.checkForNewJunimoNotes();
             screenSwipe = new ScreenSwipe(0, -1f, -1);
             currentPageBundle.CompletionAnimation(this, true, 400);
             canClick = false;
 
             int bundleRewardIndex = CommunityCenterHelper.GetBundleRewardIndex(AreaIndex, BundleIndex);
-            CommunityCenterHelper.CustomCommunityCenter.bundleRewards[bundleRewardIndex] = true;
+            CommunityCenterHelper.CustomCC.bundleRewards[bundleRewardIndex] = true;
 
             CommunityCenterHelper.MultiplayerHelper.globalChatInfoMessage("Bundle");
 
@@ -402,8 +403,8 @@ namespace CustomCommunityCenter
             }
             if (!isOneIncomplete)
             {
-                CommunityCenterHelper.CustomCommunityCenter.areasComplete[AreaIndex] = true;
-                CommunityCenterHelper.CustomCommunityCenter.areaCompleteReward(AreaIndex);
+                CommunityCenterHelper.CustomCC.areasComplete[AreaIndex] = true;
+                CommunityCenterHelper.CustomCC.areaCompleteReward(AreaIndex);
 
                 CommunityCenterHelper.BundleAreaComplete();
 
@@ -411,8 +412,8 @@ namespace CustomCommunityCenter
             }
             else
             {
-                Junimo i = (CommunityCenterHelper.CustomCommunityCenter).getJunimoForArea(AreaIndex);
-                i?.bringBundleBackToHut(Bundle.getColorFromColorIndex(currentPageBundle.BundleColor), CommunityCenterHelper.CustomCommunityCenter);
+                Junimo i = (CommunityCenterHelper.CustomCC).getJunimoForArea(AreaIndex);
+                i?.bringBundleBackToHut(Bundle.getColorFromColorIndex(currentPageBundle.BundleColor), CommunityCenterHelper.CustomCC);
             }
 
             CheckForRewards();
@@ -555,7 +556,7 @@ namespace CustomCommunityCenter
             if (!ViewingSpecificBundle)
             {
                 b.Draw(noteTexture, new Vector2(base.xPositionOnScreen, base.yPositionOnScreen), new Rectangle(0, 0, 320, 180), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, 0.1f);
-                SpriteText.drawStringHorizontallyCenteredAt(b, ScrambledText ? CustomCommunityCenter.getAreaEnglishDisplayNameFromNumber(AreaIndex) : CustomCommunityCenter.getAreaDisplayNameFromNumber(AreaIndex), base.xPositionOnScreen + base.width / 2 + 16, base.yPositionOnScreen + 12, 999999, -1, 99999, 0.88f, 0.88f, ScrambledText, -1);
+                SpriteText.drawStringHorizontallyCenteredAt(b, ScrambledText ? CustomCommunityCenterLocation.getAreaEnglishDisplayNameFromNumber(AreaIndex) : CustomCommunityCenterLocation.getAreaDisplayNameFromNumber(AreaIndex), base.xPositionOnScreen + base.width / 2 + 16, base.yPositionOnScreen + 12, 999999, -1, 99999, 0.88f, 0.88f, ScrambledText, -1);
                 if (ScrambledText)
                 {
                     SpriteText.drawString(b, LocalizedContentManager.CurrentLanguageLatin ? Game1.content.LoadString("Strings\\StringsFromCSFiles:JunimoNoteMenu.cs.10786") : Game1.content.LoadBaseString("Strings\\StringsFromCSFiles:JunimoNoteMenu.cs.10786"), base.xPositionOnScreen + 96, base.yPositionOnScreen + 96, 999999, base.width - 192, 99999, 0.88f, 0.88f, true, -1, "", -1);
@@ -754,7 +755,7 @@ namespace CustomCommunityCenter
                                 }
                                 else
                                 {
-                                    CustomCommunityCenter cc = CommunityCenterHelper.CustomCommunityCenter;
+                                    var cc = CommunityCenterHelper.CustomCC;
                                     Junimo k = cc.getJunimoForArea(AreaIndex);
                                     k?.bringBundleBackToHut(Bundle.getColorFromColorIndex(currentPageBundle.BundleColor), cc);
                                 }
@@ -830,7 +831,7 @@ namespace CustomCommunityCenter
 
         private bool ShouldNoteAppearInArea(int area)
         {
-            return CommunityCenterHelper.CustomCommunityCenter.shouldNoteAppearInArea(area);
+            return CommunityCenterHelper.CustomCC.shouldNoteAppearInArea(area);
         }
 
         public override void receiveRightClick(int x, int y, bool playSound = true)
@@ -871,7 +872,7 @@ namespace CustomCommunityCenter
             base.receiveGamePadButton(b);
             if (FromGameMenu)
             {
-                var cc = CommunityCenterHelper.CustomCommunityCenter;
+                var cc = CommunityCenterHelper.CustomCC;
                 switch (b)
                 {
                     case Buttons.RightTrigger:

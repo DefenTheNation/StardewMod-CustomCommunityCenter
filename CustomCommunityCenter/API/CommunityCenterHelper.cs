@@ -1,5 +1,6 @@
 ﻿using CustomCommunityCenter.Data;
 using CustomCommunityCenter.SaveData;
+using CustomCommunityCenter.UI;
 using Netcode;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
@@ -23,17 +24,14 @@ namespace CustomCommunityCenter.API
         protected IModHelper ModHelper { get; set; }
         protected ModConfig Config { get; set; }
 
-        internal static CustomCommunityCenter CustomCommunityCenter;
+        internal static CustomCommunityCenter2 CustomCC;
         internal static CommunityCenter CommunityCenter;
 
         public CommunityCenterHelper(IModHelper helper, ModConfig config)
         {
             ModHelper = helper;
             Config = config;
-
             BundleAreas = Config.BundleRooms;
-
-            CustomCommunityCenter = new CustomCommunityCenter();
 
             SaveEvents.BeforeSave += PresaveData;
             SaveEvents.AfterSave += InjectCommunityCenter;
@@ -103,14 +101,14 @@ namespace CustomCommunityCenter.API
 
         public static void WriteToNetFieldsFromConfig()
         {
-            CustomCommunityCenter.SetupNetFieldsFromModConfig();
+            CustomCC.SetupNetFieldsFromModConfig();
             WorldState.MarkDirty();
             MultiplayerHelper.UpdateLate(true);            
         }
 
         public static void ReadFromNetFieldsToConfig()
         {
-            CustomCommunityCenter.SetupModConfigFromNetFields();
+            CustomCC.SetupModConfigFromNetFields();
         }
 
         public void SetBundleAreas(IList<BundleAreaInfo> bundleAreas)
@@ -210,7 +208,7 @@ namespace CustomCommunityCenter.API
             // Get community center location
             for (int i = 0; i < Game1.locations.Count; i++)
             {
-                if (Game1.locations[i].Name == CustomCommunityCenter.CommunityCenterName)
+                if (Game1.locations[i].Name == CustomCC.Name)
                 {
                     CommunityCenter = Game1.locations[i] as CommunityCenter;
                     break;
@@ -273,20 +271,23 @@ namespace CustomCommunityCenter.API
 
         protected virtual void PresaveData(object sender, EventArgs e)
         {
-            CustomCommunityCenter.SetupModConfigFromNetFields();
+            CustomCC.SetupModConfigFromNetFields();
             SaveFarmProgress();
             RemoveAndReplaceCC(CommunityCenter);     
         }
 
         protected virtual void InjectCommunityCenter(object sender, EventArgs e)
         {
+            CustomCC = new CustomCommunityCenter2();
             MultiplayerHelper = ModHelper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
             WorldState = Game1.netWorldState;
 
             LoadFarmProgress();
             // Now that config is loaded, update the net fields
-            CustomCommunityCenter.SetupNetFieldsFromModConfig();
-            RemoveAndReplaceCC(CustomCommunityCenter);
+            if (Game1.IsClient) CustomCC.SetupModConfigFromNetFields();
+            else CustomCC.SetupNetFieldsFromModConfig();
+
+            RemoveAndReplaceCC(CustomCC);
         }
 
         protected virtual string GetConfigDataPath()
@@ -303,7 +304,7 @@ namespace CustomCommunityCenter.API
         {
             for(int i = 0; i < Game1.locations.Count; i++)
             {
-                if(Game1.locations[i].Name == CustomCommunityCenter.Name)
+                if(Game1.locations[i].Name == CustomCC.Name)
                 {
                     Game1.locations.RemoveAt(i);
                     break;
