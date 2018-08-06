@@ -1,6 +1,5 @@
 ﻿using CustomCommunityCenter.API;
 using CustomCommunityCenter.Data;
-using Netcode;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
@@ -108,7 +107,7 @@ namespace CustomCommunityCenter
                 }
             });
 
-            helper.ConsoleCommands.Add("shownet", "Shows Bundle Menu", (string command, string[] arguments) =>
+            helper.ConsoleCommands.Add("shownet", "Shows net fields", (string command, string[] arguments) =>
             {
                 int count = 0;
                 string output = "";
@@ -130,6 +129,29 @@ namespace CustomCommunityCenter
                 {
                     output = "Reward " + count + ": " + item;
                     count++;
+                    Monitor.Log(output);
+                }
+            });
+
+            helper.ConsoleCommands.Add("showbundles", "Shows mod data", (string command, string[] arguments) =>
+            {
+                string output;
+                foreach (var item in CommunityCenterHelper.BundleAreas)
+                {
+                    output = "";
+
+                    output += "Area" + item.Name + " Completed: " + item.Completed;
+                    foreach(var bundle in item.Bundles)
+                    {
+                        output += "Bundle " + bundle.Name + " Completed: " + bundle.Completed + "\n";
+                        foreach(var ingredient in bundle.Ingredients)
+                        {
+                            output += ingredient.ItemId + ": " + ingredient.Completed + "\n";
+                        }
+                    }
+
+                    output += "\n";
+
                     Monitor.Log(output);
                 }
             });

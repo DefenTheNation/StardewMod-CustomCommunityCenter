@@ -9,8 +9,6 @@ using StardewValley.Characters;
 using StardewValley.Network;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Xml.Serialization;
 using xTile;
 using xTile.Dimensions;
