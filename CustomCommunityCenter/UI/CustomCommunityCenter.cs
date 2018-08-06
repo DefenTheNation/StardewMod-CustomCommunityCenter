@@ -388,7 +388,7 @@ namespace CustomCommunityCenter.UI
 
         private void doCheckForNewJunimoNotes()
         {
-            if (Game1.currentLocation == this)
+            if (Game1.currentLocation.Name == Name)
             {
                 for (int i = 0; i < areasComplete.Count; i++)
                 {
@@ -481,6 +481,8 @@ namespace CustomCommunityCenter.UI
         {
             SetupNetFieldsFromModConfig();
 
+            Debug.WriteLine("CC shared state reset!");
+
             base.resetSharedState();
             if (!Game1.MasterPlayer.mailReceived.Contains("JojaMember") && !areAllAreasComplete())
             {
@@ -505,6 +507,8 @@ namespace CustomCommunityCenter.UI
         protected override void resetLocalState()
         {
             SetupModConfigFromNetFields();
+
+            Debug.WriteLine("CC local state reset!");
 
             base.resetLocalState();
             if (!Game1.MasterPlayer.mailReceived.Contains("JojaMember") && !areAllAreasComplete())
