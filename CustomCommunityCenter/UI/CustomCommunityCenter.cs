@@ -94,11 +94,17 @@ namespace CustomCommunityCenter.UI
             get { return CommunityCenterHelper.WorldState.Value.BundleRewards; }
         }
 
-        public CustomCommunityCenterLocation() : base(CommunityCenterMapName, CommunityCenterName)
+        public CustomCommunityCenterLocation() : base()
         {
             areasComplete = new NetArray<bool, NetBool>(CommunityCenterHelper.BundleAreas.Count);
 
-            initNetFields();
+            initAreaBundleConversions();
+        }
+
+        public CustomCommunityCenterLocation(bool dummy) : base(CommunityCenterMapName, CommunityCenterName)
+        {
+            areasComplete = new NetArray<bool, NetBool>(CommunityCenterHelper.BundleAreas.Count);
+
             initAreaBundleConversions();
         }
 

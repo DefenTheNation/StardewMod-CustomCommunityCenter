@@ -278,7 +278,7 @@ namespace CustomCommunityCenter.API
 
         protected virtual void InjectCommunityCenter(object sender, EventArgs e)
         {
-            CustomCC = new CustomCommunityCenterLocation();
+            CustomCC = new CustomCommunityCenterLocation(true);
 
             MultiplayerHelper = ModHelper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
             WorldState = Game1.netWorldState;
