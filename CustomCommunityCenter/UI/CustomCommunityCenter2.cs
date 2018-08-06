@@ -84,8 +84,7 @@ namespace CustomCommunityCenter.UI
             }
         }
 
-
-        public CustomCommunityCenter2(string name) : base(name)
+        public CustomCommunityCenter2() : base("CommunityCenter")
         {
             var ptr = typeof(GameLocation).GetMethod("checkAction").MethodHandle.GetFunctionPointer();
             gameLocationCheckAction = (Func<Location, xTile.Dimensions.Rectangle, Farmer, bool>)Activator.CreateInstance(typeof(Func<Location, xTile.Dimensions.Rectangle, Farmer, bool>), this, ptr);

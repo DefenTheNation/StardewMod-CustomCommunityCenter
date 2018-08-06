@@ -24,7 +24,7 @@ namespace CustomCommunityCenter.API
         protected IModHelper ModHelper { get; set; }
         protected ModConfig Config { get; set; }
 
-        internal static CustomCommunityCenter2 CustomCC;
+        internal static CustomCommunityCenterLocation CustomCC;
         internal static CommunityCenter CommunityCenter;
 
         public CommunityCenterHelper(IModHelper helper, ModConfig config)
@@ -278,7 +278,7 @@ namespace CustomCommunityCenter.API
 
         protected virtual void InjectCommunityCenter(object sender, EventArgs e)
         {
-            CustomCC = new CustomCommunityCenter2(CustomCommunityCenterLocation.CommunityCenterName);
+            CustomCC = new CustomCommunityCenterLocation();
 
             MultiplayerHelper = ModHelper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
             WorldState = Game1.netWorldState;
