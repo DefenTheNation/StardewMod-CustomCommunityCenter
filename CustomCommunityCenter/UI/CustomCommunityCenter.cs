@@ -479,7 +479,7 @@ namespace CustomCommunityCenter.UI
 
         protected override void resetSharedState()
         {
-            SetupNetFieldsFromModConfig();
+            //SetupModConfigFromNetFields();
 
             Debug.WriteLine("CC shared state reset!");
 
