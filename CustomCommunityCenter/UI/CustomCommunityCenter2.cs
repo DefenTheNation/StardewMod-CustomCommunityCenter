@@ -15,6 +15,10 @@ using System.Xml.Serialization;
 using xTile;
 using xTile.Dimensions;
 using xTile.Tiles;
+using System.IO;
+using StardewValley.Quests;
+using xTile.ObjectModel;
+using StardewValley.Menus;
 
 namespace CustomCommunityCenter.UI
 {
@@ -51,13 +55,83 @@ namespace CustomCommunityCenter.UI
 
         private Cue buildUpSound;
 
-        public CustomCommunityCenter2() : base()
-        {
+        private readonly Func<Location, xTile.Dimensions.Rectangle, Farmer, bool> gameLocationCheckAction;
 
-            //areasComplete = new NetArray<bool, NetBool>(CommunityCenterHelper.BundleAreas.Count);
+        private readonly Action<GameTime> gameLocationUpdateWhenCurrentLocation;
+
+        private readonly NetEvent1Field<float, NetFloat> removeTemporarySpritesWithIDEvent = new NetEvent1Field<float, NetFloat>();
+
+        private readonly NetEvent1Field<int, NetInt> rumbleAndFadeEvent = new NetEvent1Field<int, NetInt>();
+
+        private readonly NetEvent1<DamagePlayersEventArg> damagePlayersEvent = new NetEvent1<DamagePlayersEventArg>();
+
+        private struct DamagePlayersEventArg : NetEventArg
+        {
+            public Microsoft.Xna.Framework.Rectangle Area;
+
+            public int Damage;
+
+            public void Read(BinaryReader reader)
+            {
+                Area = reader.ReadRectangle();
+                Damage = reader.ReadInt32();
+            }
+
+            public void Write(BinaryWriter writer)
+            {
+                writer.WriteRectangle(Area);
+                writer.Write(Damage);
+            }
+        }
+
+
+        public CustomCommunityCenter2(string name) : base(name)
+        {
+            var ptr = typeof(GameLocation).GetMethod("checkAction").MethodHandle.GetFunctionPointer();
+            gameLocationCheckAction = (Func<Location, xTile.Dimensions.Rectangle, Farmer, bool>)Activator.CreateInstance(typeof(Func<Location, xTile.Dimensions.Rectangle, Farmer, bool>), this, ptr);
+
+            ptr = typeof(GameLocation).GetMethod("UpdateWhenCurrentLocation").MethodHandle.GetFunctionPointer();
+            gameLocationUpdateWhenCurrentLocation = (Action<GameTime>)Activator.CreateInstance(typeof(Action<GameTime>), this, ptr);
 
             initNetFields();
             initAreaBundleConversions();
+        }
+
+        private void gameLocationInitNetFields()
+        {
+            // null = interiorDoors
+            NetFields.AddFields(mapPath, uniqueName, name, lightLevel, sharedLights, isFarm, isOutdoors, isStructure, ignoreDebrisWeather, ignoreOutdoorLighting, ignoreLights, treatAsOutdoors, warps, doors, waterColor, netObjects, projectiles, largeTerrainFeatures, terrainFeatures, characters, debris, netAudio.NetFields, removeTemporarySpritesWithIDEvent, rumbleAndFadeEvent, damagePlayersEvent, lightGlows, fishSplashPoint, orePanPoint);
+            sharedLights.OnValueAdded += delegate (LightSource light)
+            {
+                if (Game1.currentLocation.Name == Name)
+                {
+                    Game1.currentLightSources.Add(light);
+                }
+            };
+            sharedLights.OnValueRemoved += delegate (LightSource light)
+            {
+                if (Game1.currentLocation.Name == Name)
+                {
+                    Game1.currentLightSources.Remove(light);
+                }
+            };
+            netObjects.OnConflictResolve += delegate (Vector2 pos, NetRef<StardewValley.Object> rejected, NetRef<StardewValley.Object> accepted)
+            {
+                if (Game1.IsMasterGame)
+                {
+                    StardewValley.Object value = rejected.Value;
+                    if (value != null)
+                    {
+                        value.NetFields.Parent = null;
+                        value.dropItem(this, pos * 64f, pos * 64f);
+                    }
+                }
+            };
+            removeTemporarySpritesWithIDEvent.onEvent += removeTemporarySpritesWithIDLocal;
+            characters.OnValueRemoved += delegate (NPC npc)
+            {
+                npc.Removed();
+            };
         }
 
         protected override void initNetFields()
@@ -67,8 +141,9 @@ namespace CustomCommunityCenter.UI
             //SetupModConfigFromNetFields();
 
             // Continue net field initialization
-            base.initNetFields();
-            base.NetFields.AddFields(warehouse, areasComplete, numberOfStarsOnPlaque, newJunimoNoteCheckEvent, restoreAreaCutsceneEvent, areaCompleteRewardEvent);
+            gameLocationInitNetFields();
+
+            NetFields.AddFields(warehouse, areasComplete, numberOfStarsOnPlaque, newJunimoNoteCheckEvent, restoreAreaCutsceneEvent, areaCompleteRewardEvent);
             newJunimoNoteCheckEvent.onEvent += doCheckForNewJunimoNotes;
             restoreAreaCutsceneEvent.onEvent += doRestoreAreaCutscene;
             areaCompleteRewardEvent.onEvent += doAreaCompleteReward;
@@ -104,8 +179,6 @@ namespace CustomCommunityCenter.UI
 
                 bundles.Add(i, ingredients);
             }
-
-            Debug.WriteLine("Netfields updated!");
         }
 
         public virtual void SetupModConfigFromNetFields()
@@ -153,29 +226,6 @@ namespace CustomCommunityCenter.UI
             }
 
             return -1;
-
-            //switch (name)
-            //{
-            //    case "Pantry":
-            //        return 0;
-            //    case "Crafts Room":
-            //    case "CraftsRoom":
-            //        return 1;
-            //    case "Fish Tank":
-            //    case "FishTank":
-            //        return 2;
-            //    case "Boiler Room":
-            //    case "BoilerRoom":
-            //        return 3;
-            //    case "Vault":
-            //        return 4;
-            //    case "BulletinBoard":
-            //    case "Bulletin Board":
-            //    case "Bulletin":
-            //        return 5;
-            //    default:
-            //        return -1;
-            //}
         }
 
         private Point getNotePosition(int area)
@@ -222,6 +272,133 @@ namespace CustomCommunityCenter.UI
             return complete;
         }
 
+        public new void restoreAreaCutscene(int whichArea)
+        {
+            restoreAreaCutsceneEvent.Fire(whichArea);
+            doRestoreAreaCutscene(whichArea);
+        }
+
+        public new void areaCompleteReward(int whichArea)
+        {
+            areaCompleteRewardEvent.Fire(whichArea);
+        }
+
+        public new void checkForNewJunimoNotes()
+        {
+            newJunimoNoteCheckEvent.Fire();
+        }
+
+        public new Junimo getJunimoForArea(int whichArea)
+        {
+            foreach (NPC character in base.characters)
+            {
+                if (character is Junimo && (character as Junimo).whichArea.Value == whichArea)
+                {
+                    return character as Junimo;
+                }
+            }
+            Junimo i = new Junimo(Vector2.Zero, whichArea, false);
+            base.addCharacter(i);
+            return i;
+        }
+
+        public new bool shouldNoteAppearInArea(int area)
+        {
+            if (area >= 0 && areasComplete.Count > area && !areasComplete[area])
+            {
+                int completedBundles = numberOfCompleteBundles();
+
+                switch (area)
+                {
+                    case 1:
+                        return true;
+                    case 0:
+                    case 2:
+                        if (completedBundles <= 0)
+                        {
+                            break;
+                        }
+                        return true;
+                    case 3:
+                        if (completedBundles <= 1)
+                        {
+                            break;
+                        }
+                        return true;
+                    case 5:
+                        if (completedBundles <= 2)
+                        {
+                            break;
+                        }
+                        return true;
+                    case 4:
+                        if (completedBundles <= 3)
+                        {
+                            break;
+                        }
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        public new int numberOfCompleteBundles()
+        {
+            int number = 0;
+
+            foreach (var bundleArea in CommunityCenterHelper.BundleAreas)
+            {
+                number += bundleArea.BundlesCompleted;
+            }
+
+            return number;
+        }
+
+        public new void addJunimoNote(int area)
+        {
+            Point position = getNotePosition(area);
+            if (!position.Equals(Vector2.Zero))
+            {
+                StaticTile[] tileFrames = getJunimoNoteTileFrames(area);
+                string layer = (area == 5) ? "Front" : "Buildings";
+                base.map.GetLayer(layer).Tiles[position.X, position.Y] = new AnimatedTile(base.map.GetLayer(layer), tileFrames, 70L);
+                Game1.currentLightSources.Add(new LightSource(4, new Vector2(position.X * 64, position.Y * 64), 1f));
+                base.temporarySprites.Add(new TemporaryAnimatedSprite(6, new Vector2(position.X * 64, position.Y * 64), Color.White, 8, false, 100f, 0, -1, -1f, -1, 0)
+                {
+                    layerDepth = 1f,
+                    interval = 50f,
+                    motion = new Vector2(1f, 0f),
+                    acceleration = new Vector2(-0.005f, 0f)
+                });
+                base.temporarySprites.Add(new TemporaryAnimatedSprite(6, new Vector2(position.X * 64 - 12, position.Y * 64 - 12), Color.White, 8, false, 100f, 0, -1, -1f, -1, 0)
+                {
+                    scale = 0.75f,
+                    layerDepth = 1f,
+                    interval = 50f,
+                    motion = new Vector2(1f, 0f),
+                    acceleration = new Vector2(-0.005f, 0f),
+                    delayBeforeAnimationStart = 50
+                });
+                base.temporarySprites.Add(new TemporaryAnimatedSprite(6, new Vector2(position.X * 64 - 12, position.Y * 64 + 12), Color.White, 8, false, 100f, 0, -1, -1f, -1, 0)
+                {
+                    layerDepth = 1f,
+                    interval = 50f,
+                    motion = new Vector2(1f, 0f),
+                    acceleration = new Vector2(-0.005f, 0f),
+                    delayBeforeAnimationStart = 100
+                });
+                base.temporarySprites.Add(new TemporaryAnimatedSprite(6, new Vector2(position.X * 64, position.Y * 64), Color.White, 8, false, 100f, 0, -1, -1f, -1, 0)
+                {
+                    layerDepth = 1f,
+                    scale = 0.75f,
+                    interval = 50f,
+                    motion = new Vector2(1f, 0f),
+                    acceleration = new Vector2(-0.005f, 0f),
+                    delayBeforeAnimationStart = 150
+                });
+            }
+        }
+
         public override bool checkAction(Location tileLocation, xTile.Dimensions.Rectangle viewport, Farmer who)
         {
             switch ((base.map.GetLayer("Buildings").Tiles[tileLocation] != null) ? base.map.GetLayer("Buildings").Tiles[tileLocation].TileIndex : (-1))
@@ -245,7 +422,226 @@ namespace CustomCommunityCenter.UI
                     checkBundle(getAreaNumberFromLocation(who.getTileLocation()));
                     break;
             }
-            return base.checkAction(tileLocation, viewport, who);
+
+            return gameLocationCheckAction(tileLocation, viewport, who);
+        }
+
+        public new void loadArea(int area, bool showEffects = true)
+        {
+            SetupModConfigFromNetFields();
+
+            Microsoft.Xna.Framework.Rectangle areaToRefurbish = getAreaBounds(area);
+            Map refurbishedMap = Game1.game1.xTileContent.Load<Map>("Maps\\CommunityCenter_Refurbished");
+            for (int x = areaToRefurbish.X; x < areaToRefurbish.Right; x++)
+            {
+                for (int y = areaToRefurbish.Y; y < areaToRefurbish.Bottom; y++)
+                {
+                    if (refurbishedMap.GetLayer("Back").Tiles[x, y] != null)
+                    {
+                        base.map.GetLayer("Back").Tiles[x, y].TileIndex = refurbishedMap.GetLayer("Back").Tiles[x, y].TileIndex;
+                    }
+                    if (refurbishedMap.GetLayer("Buildings").Tiles[x, y] != null)
+                    {
+                        base.map.GetLayer("Buildings").Tiles[x, y] = new StaticTile(base.map.GetLayer("Buildings"), base.map.TileSheets[0], BlendMode.Alpha, refurbishedMap.GetLayer("Buildings").Tiles[x, y].TileIndex);
+                        base.adjustMapLightPropertiesForLamp(refurbishedMap.GetLayer("Buildings").Tiles[x, y].TileIndex, x, y, "Buildings");
+                    }
+                    else
+                    {
+                        base.map.GetLayer("Buildings").Tiles[x, y] = null;
+                    }
+                    if (refurbishedMap.GetLayer("Front").Tiles[x, y] != null)
+                    {
+                        base.map.GetLayer("Front").Tiles[x, y] = new StaticTile(base.map.GetLayer("Front"), base.map.TileSheets[0], BlendMode.Alpha, refurbishedMap.GetLayer("Front").Tiles[x, y].TileIndex);
+                        base.adjustMapLightPropertiesForLamp(refurbishedMap.GetLayer("Front").Tiles[x, y].TileIndex, x, y, "Front");
+                    }
+                    else
+                    {
+                        base.map.GetLayer("Front").Tiles[x, y] = null;
+                    }
+                    if (refurbishedMap.GetLayer("Paths").Tiles[x, y] != null && refurbishedMap.GetLayer("Paths").Tiles[x, y].TileIndex == 8)
+                    {
+                        Game1.currentLightSources.Add(new LightSource(4, new Vector2(x * 64, y * 64), 2f));
+                    }
+                    if (showEffects && Game1.random.NextDouble() < 0.58 && refurbishedMap.GetLayer("Buildings").Tiles[x, y] == null)
+                    {
+                        base.temporarySprites.Add(new TemporaryAnimatedSprite(6, new Vector2(x * 64, y * 64), Color.White, 8, false, 100f, 0, -1, -1f, -1, 0)
+                        {
+                            layerDepth = 1f,
+                            interval = 50f,
+                            motion = new Vector2(Game1.random.Next(17) / 10f, 0f),
+                            acceleration = new Vector2(-0.005f, 0f),
+                            delayBeforeAnimationStart = Game1.random.Next(500)
+                        });
+                    }
+                }
+            }
+            if (area == 5)
+            {
+                loadArea(6, true);
+            }
+            base.addLightGlows();
+        }
+
+        public override void drawAboveAlwaysFrontLayer(SpriteBatch b)
+        {
+            if (messageAlpha > 0f)
+            {
+                Junimo i = getJunimoForArea(0);
+                if (i != null)
+                {
+                    b.Draw(i.Sprite.Texture, new Vector2(Game1.viewport.Width / 2 - 32, Game1.viewport.Height * 2 / 3f - 64f), new Microsoft.Xna.Framework.Rectangle((int)(Game1.currentGameTime.TotalGameTime.TotalMilliseconds % 800.0) / 100 * 16, 0, 16, 16), Color.Lime * messageAlpha, 0f, new Vector2(i.Sprite.SpriteWidth * 4 / 2, (i.Sprite.SpriteHeight * 4) * 3f / 4f) / 4f, Math.Max(0.2f, 1f) * 4f, i.flip ? SpriteEffects.FlipHorizontally : SpriteEffects.None, 1f);
+                }
+                b.DrawString(Game1.dialogueFont, "\"" + Game1.parseText(getMessageForAreaCompletion() + "\"", Game1.dialogueFont, 640), new Vector2(Game1.viewport.Width / 2 - 320, Game1.viewport.Height * 2 / 3f), Game1.textColor * messageAlpha * 0.6f);
+            }
+        }
+
+        public override void UpdateWhenCurrentLocation(GameTime time)
+        {
+            gameLocationUpdateWhenCurrentLocation(time);
+
+            if (restoreAreaTimer > 0)
+            {
+                int old = restoreAreaTimer;
+                restoreAreaTimer -= time.ElapsedGameTime.Milliseconds;
+                switch (restoreAreaPhase)
+                {
+                    case 0:
+                        if (restoreAreaTimer <= 0)
+                        {
+                            restoreAreaTimer = 3000;
+                            restoreAreaPhase = 1;
+                            if (Game1.player.currentLocation.Name == Name)
+                            {
+                                Game1.player.faceDirection(2);
+                                Game1.player.jump();
+                                Game1.player.jitterStrength = 1f;
+                                Game1.player.showFrame(94, false);
+                            }
+                        }
+                        break;
+                    case 1:
+                        if (Game1.IsMasterGame && Game1.random.NextDouble() < 0.4)
+                        {
+                            Vector2 v = Utility.getRandomPositionInThisRectangle(getAreaBounds(restoreAreaIndex), Game1.random);
+                            Junimo i = new Junimo(v * 64f, restoreAreaIndex, true);
+                            if (!base.isCollidingPosition(i.GetBoundingBox(), Game1.viewport, i))
+                            {
+                                base.characters.Add(i);
+
+                                CommunityCenterHelper.MultiplayerHelper.broadcastSprites(this, new TemporaryAnimatedSprite((Game1.random.NextDouble() < 0.5) ? 5 : 46, v * 64f + new Vector2(16f, 16f), Color.White, 8, false, 100f, 0, -1, -1f, -1, 0)
+                                {
+                                    layerDepth = 1f
+                                });
+                                //Game1.multiplayer.broadcastSprites(this, new TemporaryAnimatedSprite((Game1.random.NextDouble() < 0.5) ? 5 : 46, v * 64f + new Vector2(16f, 16f), Color.White, 8, false, 100f, 0, -1, -1f, -1, 0)
+                                //{
+                                //    layerDepth = 1f
+                                //});
+                                base.localSound("tinyWhip");
+                            }
+                        }
+                        if (restoreAreaTimer <= 0)
+                        {
+                            restoreAreaTimer = 999999;
+                            restoreAreaPhase = 2;
+                            if (Game1.player.currentLocation.Name != Name)
+                            {
+                                break;
+                            }
+                            Game1.screenGlowOnce(Color.White, true, 0.005f, 1f);
+                            if (Game1.soundBank != null)
+                            {
+                                buildUpSound = Game1.soundBank.GetCue("wind");
+                                buildUpSound.SetVariable("Volume", 0f);
+                                buildUpSound.SetVariable("Frequency", 0f);
+                                buildUpSound.Play();
+                            }
+                            Game1.player.jitterStrength = 2f;
+                            Game1.player.stopShowingFrame();
+                        }
+                        Game1.drawLighting = false;
+                        break;
+                    case 2:
+                        if (buildUpSound != null)
+                        {
+                            buildUpSound.SetVariable("Volume", Game1.screenGlowAlpha * 150f);
+                            buildUpSound.SetVariable("Frequency", Game1.screenGlowAlpha * 150f);
+                        }
+                        if (Game1.screenGlowAlpha >= Game1.screenGlowMax)
+                        {
+                            messageAlpha += 0.008f;
+                            messageAlpha = Math.Min(messageAlpha, 1f);
+                        }
+                        if ((Game1.screenGlowAlpha == Game1.screenGlowMax || Game1.currentLocation.Name != Name) && restoreAreaTimer > 5200)
+                        {
+                            restoreAreaTimer = 5200;
+                        }
+                        if (restoreAreaTimer < 5200 && Game1.random.NextDouble() < (double)((float)(5200 - restoreAreaTimer) / 10000f))
+                        {
+                            base.localSound((Game1.random.NextDouble() < 0.5) ? "dustMeep" : "junimoMeep1");
+                        }
+                        if (restoreAreaTimer <= 0)
+                        {
+                            restoreAreaTimer = 2000;
+                            messageAlpha = 0f;
+                            restoreAreaPhase = 3;
+                            if (Game1.IsMasterGame)
+                            {
+                                for (int j = base.characters.Count - 1; j >= 0; j--)
+                                {
+                                    if (base.characters[j] is Junimo && (base.characters[j] as Junimo).temporaryJunimo.Value)
+                                    {
+                                        base.characters.RemoveAt(j);
+                                    }
+                                }
+                            }
+                            if (Game1.player.currentLocation.Name == Name)
+                            {
+                                Game1.screenGlowHold = false;
+                                loadArea(restoreAreaIndex, true);
+                                if (buildUpSound != null)
+                                {
+                                    buildUpSound.Stop(AudioStopOptions.Immediate);
+                                }
+                                base.localSound("wand");
+                                Game1.changeMusicTrack("junimoStarSong");
+                                base.localSound("woodyHit");
+                                Game1.flashAlpha = 1f;
+                                Game1.player.stopJittering();
+                                Game1.drawLighting = true;
+                            }
+                        }
+                        break;
+                    case 3:
+                        if (old > 1000 && restoreAreaTimer <= 1000)
+                        {
+                            Junimo k = getJunimoForArea(restoreAreaIndex);
+                            if (k != null && Game1.IsMasterGame)
+                            {
+                                k.Position = Utility.getRandomAdjacentOpenTile(Utility.PointToVector2(getNotePosition(restoreAreaIndex)), this) * 64f;
+                                int iter = 0;
+                                while (base.isCollidingPosition(k.GetBoundingBox(), Game1.viewport, k) && iter < 20)
+                                {
+                                    k.Position = Utility.getRandomPositionInThisRectangle(getAreaBounds(restoreAreaIndex), Game1.random);
+                                    iter++;
+                                }
+                                if (iter < 20)
+                                {
+                                    k.fadeBack();
+                                    k.returnToJunimoHutToFetchStar(this);
+                                }
+                            }
+                        }
+                        if (restoreAreaTimer <= 0)
+                        {
+                            Game1.freezeControls = false;
+                        }
+                        break;
+                }
+            }
+            else if (Game1.activeClickableMenu == null && junimoNotesViewportTargets != null && junimoNotesViewportTargets.Count > 0 && !Game1.isViewportOnCustomPath())
+            {
+                setViewportToNextJunimoNoteTarget();
+            }
         }
 
         private void checkBundle(int area)
@@ -258,28 +654,163 @@ namespace CustomCommunityCenter.UI
 
         private void doCheckForNewJunimoNotes()
         {
-            if (Game1.currentLocation == this)
+            if (Game1.currentLocation.Name == Name)
             {
                 for (int i = 0; i < areasComplete.Count; i++)
                 {
                     if (!isJunimoNoteAtArea(i) && shouldNoteAppearInArea(i) && (junimoNotesViewportTargets == null || !junimoNotesViewportTargets.Contains(i)))
                     {
-                        addJunimoNoteViewportTarget(i);
+                        // changed to use local
+                        AddJunimoNoteViewportTarget(i);
                     }
                 }
             }
         }
 
+        private void AddJunimoNoteViewportTarget(int area)
+        {
+            if (junimoNotesViewportTargets == null)
+            {
+                junimoNotesViewportTargets = new List<int>();
+            }
+            junimoNotesViewportTargets.Add(area);
+        }
+
         protected override void resetSharedState()
         {
             SetupNetFieldsFromModConfig();
-            base.resetSharedState();
+
+            if (!Game1.MasterPlayer.mailReceived.Contains("JojaMember") && !areAllAreasComplete())
+            {
+                for (int i = 0; i < areasComplete.Count; i++)
+                {
+                    if (shouldNoteAppearInArea(i))
+                    {
+                        base.characters.Add(new Junimo(new Vector2(getNotePosition(i).X, getNotePosition(i).Y + 2) * 64f, i, false));
+                    }
+                }
+            }
+            numberOfStarsOnPlaque.Value = 0;
+            for (int j = 0; j < areasComplete.Count; j++)
+            {
+                if (areasComplete[j])
+                {
+                    numberOfStarsOnPlaque.Value++;
+                }
+            }
         }
 
         protected override void resetLocalState()
         {
             SetupModConfigFromNetFields();
-            base.resetLocalState();
+
+            Utility.killAllStaticLoopingSoundCues();
+            if (Game1.CurrentEvent == null && !Name.ToLower().Contains("bath"))
+            {
+                Game1.player.canOnlyWalk = false;
+            }
+            Game1.UpdateViewPort(false, new Point(Game1.player.getStandingX(), Game1.player.getStandingY()));
+            Game1.previousViewportPosition = new Vector2((float)Game1.viewport.X, (float)Game1.viewport.Y);
+            foreach (IClickableMenu onScreenMenu in Game1.onScreenMenus)
+            {
+                onScreenMenu.gameWindowSizeChanged(new Microsoft.Xna.Framework.Rectangle(Game1.viewport.X, Game1.viewport.Y, Game1.viewport.Width, Game1.viewport.Height), new Microsoft.Xna.Framework.Rectangle(Game1.viewport.X, Game1.viewport.Y, Game1.viewport.Width, Game1.viewport.Height));
+            }
+            ignoreWarps = false;
+            if (Game1.player.rightRing.Value != null)
+            {
+                Game1.player.rightRing.Value.onNewLocation(Game1.player, this);
+            }
+            if (Game1.player.leftRing.Value != null)
+            {
+                Game1.player.leftRing.Value.onNewLocation(Game1.player, this);
+            }
+            forceViewportPlayerFollow = Map.Properties.ContainsKey("ViewportFollowPlayer");
+            lastTouchActionLocation = Game1.player.getTileLocation();
+            for (int n = Game1.player.questLog.Count - 1; n >= 0; n--)
+            {
+                ((NetList<Quest, NetRef<Quest>>)Game1.player.questLog)[n].adjustGameLocation(this);
+            }
+            if (!isOutdoors.Value)
+            {
+                Game1.player.FarmerSprite.currentStep = "thudStep";
+            }
+            if (!isOutdoors.Value || ignoreOutdoorLighting.Value)
+            {
+                map.Properties.TryGetValue("AmbientLight", out PropertyValue ambientLight);
+                if (ambientLight != null)
+                {
+                    string[] colorSplit = ambientLight.ToString().Split(' ');
+                    Game1.ambientLight = new Color(Convert.ToInt32(colorSplit[0]), Convert.ToInt32(colorSplit[1]), Convert.ToInt32(colorSplit[2]));
+                }
+                else if (Game1.isDarkOut() || lightLevel.Value > 0f)
+                {
+                    Game1.ambientLight = new Color(180, 180, 0);
+                }
+                else
+                {
+                    Game1.ambientLight = Color.White;
+                }
+                if (Game1.bloom != null)
+                {
+                    Game1.bloom.Visible = false;
+                }
+                if (Game1.currentSong != null && Game1.currentSong.Name.Contains("ambient"))
+                {
+                    Game1.changeMusicTrack("none");
+                }
+            }
+
+            setUpLocationSpecificFlair();
+
+            map.Properties.TryGetValue("Light", out PropertyValue lights);
+            if (lights != null && !ignoreLights.Value)
+            {
+                string[] split5 = lights.ToString().Split(' ');
+                for (int l = 0; l < split5.Length; l += 3)
+                {
+                    Game1.currentLightSources.Add(new LightSource(Convert.ToInt32(split5[l + 2]), new Vector2((float)(Convert.ToInt32(split5[l]) * 64 + 32), (float)(Convert.ToInt32(split5[l + 1]) * 64 + 32)), 1f));
+                }
+            }
+
+            PropertyValue musicValue = null;
+            map.Properties.TryGetValue("Music", out musicValue);
+            if (musicValue != null)
+            {
+                string[] split3 = musicValue.ToString().Split(' ');
+                if (split3.Length > 1)
+                {
+                    if (Game1.timeOfDay >= Convert.ToInt32(split3[0]) && Game1.timeOfDay < Convert.ToInt32(split3[1]) && !split3[2].Equals(Game1.currentSong.Name))
+                    {
+                        Game1.changeMusicTrack(split3[2]);
+                    }
+                }
+                else if (Game1.currentSong == null || Game1.currentSong.IsStopped || !split3[0].Equals(Game1.currentSong.Name))
+                {
+                    Game1.changeMusicTrack(split3[0]);
+                }
+            }
+
+            Game1.currentLightSources.UnionWith(sharedLights);
+
+
+            if (!Game1.MasterPlayer.mailReceived.Contains("JojaMember") && !areAllAreasComplete())
+            {
+                for (int i = 0; i < areasComplete.Count; i++)
+                {
+                    if (shouldNoteAppearInArea(i))
+                    {
+                        addJunimoNote(i);
+                    }
+                    else if (areasComplete[i])
+                    {
+                        loadArea(i, false);
+                    }
+                }
+            }
+            if (!Game1.eventUp && !areAllAreasComplete())
+            {
+                Game1.changeMusicTrack("communityCenter");
+            }
         }
 
         private int getAreaNumberFromLocation(Vector2 tileLocation)
@@ -436,39 +967,39 @@ namespace CustomCommunityCenter.UI
             Game1.showGlobalMessage(Game1.content.LoadString("Strings\\Locations:CommunityCenter_JunimosReturned"));
         }
 
-        //public static string getAreaNameFromNumber(int areaNumber)
-        //{
-        //    return CommunityCenterHelper.BundleAreas[areaNumber].Name;
-        //    //switch (areaNumber)
-        //    //{
-        //    //    case 3:
-        //    //        return "Boiler Room";
-        //    //    case 5:
-        //    //        return "Bulletin Board";
-        //    //    case 1:
-        //    //        return "Crafts Room";
-        //    //    case 2:
-        //    //        return "Fish Tank";
-        //    //    case 0:
-        //    //        return "Pantry";
-        //    //    case 4:
-        //    //        return "Vault";
-        //    //    default:
-        //    //        return "";
-        //    //}
-        //}
+        public static new string getAreaNameFromNumber(int areaNumber)
+        {
+            return CommunityCenterHelper.BundleAreas[areaNumber].Name;
+            //switch (areaNumber)
+            //{
+            //    case 3:
+            //        return "Boiler Room";
+            //    case 5:
+            //        return "Bulletin Board";
+            //    case 1:
+            //        return "Crafts Room";
+            //    case 2:
+            //        return "Fish Tank";
+            //    case 0:
+            //        return "Pantry";
+            //    case 4:
+            //        return "Vault";
+            //    default:
+            //        return "";
+            //}
+        }
 
-        //public static string getAreaEnglishDisplayNameFromNumber(int areaNumber)
-        //{
-        //    return CommunityCenterHelper.BundleAreas[areaNumber].Name;
-        //    //return Game1.content.LoadBaseString("Strings\\Locations:CommunityCenter_AreaName_" + getAreaNameFromNumber(areaNumber).Replace(" ", ""));
-        //}
+        public static new string getAreaEnglishDisplayNameFromNumber(int areaNumber)
+        {
+            return CommunityCenterHelper.BundleAreas[areaNumber].Name;
+            //return Game1.content.LoadBaseString("Strings\\Locations:CommunityCenter_AreaName_" + getAreaNameFromNumber(areaNumber).Replace(" ", ""));
+        }
 
-        //public static string getAreaDisplayNameFromNumber(int areaNumber)
-        //{
-        //    return CommunityCenterHelper.BundleAreas[areaNumber].Name;
-        //    //return Game1.content.LoadString("Strings\\Locations:CommunityCenter_AreaName_" + getAreaNameFromNumber(areaNumber).Replace(" ", ""));
-        //}
+        public static new string getAreaDisplayNameFromNumber(int areaNumber)
+        {
+            return CommunityCenterHelper.BundleAreas[areaNumber].Name;
+            //return Game1.content.LoadString("Strings\\Locations:CommunityCenter_AreaName_" + getAreaNameFromNumber(areaNumber).Replace(" ", ""));
+        }
 
         private StaticTile[] getJunimoNoteTileFrames(int area)
         {

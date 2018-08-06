@@ -80,21 +80,9 @@ namespace CustomCommunityCenter
                 myID = 102,
                 rightNeighborID = 101
             };
-            for (int j = 0; j < info.Count; j++)
-            {
-                if (cc.shouldNoteAppearInArea(j))
-                {
-                    AreaNextButton.visible = true;
-                }
-            }
+
             for (int i = 0; i < info.Count; i++)
             {
-                int a = AreaIndex - i;
-                if (a == -1)
-                {
-                    a = info.Count - 1;
-                }
-
                 if (cc.shouldNoteAppearInArea(AreaIndex))
                 {
                     AreaBackButton.visible = true;
@@ -354,15 +342,17 @@ namespace CustomCommunityCenter
             CommunityCenterHelper.CustomCC.areasComplete[areaIndex] = true;
             CommunityCenterHelper.CustomCC.areaCompleteReward(areaIndex);
 
+            CommunityCenterHelper.BundleAreaComplete();
+
             exitFunction = RestoreAreaOnExit;
         }
 
         private void RestoreAreaOnExit()
         {
-            if (!FromGameMenu)
-            {
-                (CommunityCenterHelper.CustomCC).restoreAreaCutscene(AreaIndex);
-            }
+            //if (!FromGameMenu)
+            //{
+            CommunityCenterHelper.CustomCC.restoreAreaCutscene(AreaIndex);
+            //}
         }
 
         private void CheckIfBundleIsComplete()
@@ -408,7 +398,7 @@ namespace CustomCommunityCenter
 
                 CommunityCenterHelper.BundleAreaComplete();
 
-                base.exitFunction = RestoreAreaOnExit;
+                exitFunction = RestoreAreaOnExit;
             }
             else
             {
@@ -472,7 +462,7 @@ namespace CustomCommunityCenter
 
             Game1.activeClickableMenu = new ItemGrabMenu(rewards, false, true, null, null, null, RewardGrabbed, false, true, true, true, false, 0, null, -1, null)
             {
-                exitFunction = (exitFunction ?? new onExit(ReOpenThisMenu))
+                exitFunction = (this.exitFunction ?? new onExit(ReOpenThisMenu))
             };
         }
 
